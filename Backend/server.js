@@ -5,7 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');;
-const { Package, Course, Booking, Blog, PageSetting, Contact, User} = require('./models');
+const { Package, Course, Booking, Blog, PageSetting, Contact, User, Team} = require('./models');
 
 const JWT_SECRET = 'uDrive_Secret_Token_Key_123';
 
@@ -246,6 +246,45 @@ app.put('/api/courses/:id', async (req, res) => {
     }
 });
 
+app.get('/api/team', async (req, res) => {
+    try {
+        // 1. Get total count for the header
+        const total = await Team.countDocuments();
+        
+        // 2. Extract pagination and sorting from React-Admin parameters
+        const start = parseInt(req.query._start) || 0;
+        const end = parseInt(req.query._end) || 10;
+        const limit = end - start;
+
+        // 3. Fetch data with pagination
+        const team = await Team.find().skip(start).limit(limit);
+        const mapped = team.map(t => ({ id: t._id.toString(), ...t.toObject() }));
+        
+        // 4. Set Headers (Required for React-Admin to work)
+        res.setHeader('Content-Range', `team ${start}-${start + mapped.length}/${total}`);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Range');
+        
+        res.json(mapped);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+// You also need these for CRUD (Edit/Delete) to work
+app.post('/api/team', async (req, res) => {
+    const newMember = new Team(req.body);
+    await newMember.save();
+    res.status(201).json({ id: newMember._id.toString(), ...newMember.toObject() });
+});
+
+app.put('/api/team/:id', async (req, res) => {
+    const updated = await Team.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json({ id: updated._id.toString(), ...updated.toObject() });
+});
+
+app.delete('/api/team/:id', async (req, res) => {
+    await Team.findByIdAndDelete(req.params.id);
+    res.json({ id: req.params.id });
+});
 app.delete('/api/courses/:id', async (req, res) => {
     try {
         const deletedCourse = await Course.findByIdAndDelete(req.params.id);

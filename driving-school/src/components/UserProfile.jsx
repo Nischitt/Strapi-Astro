@@ -1,341 +1,405 @@
 import React, { useState, useEffect } from 'react';
 
 export default function UserProfile() {
-    // Read session storage values safely
-    const token = localStorage.getItem('studentToken');
-    const studentEmail = localStorage.getItem('studentEmail') || "student@udrive.com";
-    
-    // State management for database records
-    const [myBookings, setMyBookings] = useState([]);
-    const [availablePackages, setAvailablePackages] = useState([]);
-    const [availableCourses, setAvailableCourses] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [message, setMessage] = useState({ text: '', type: '' });
+  // Read session storage values safely
+  const token = localStorage.getItem('studentToken');
+  const studentEmail = localStorage.getItem('studentEmail') || "student@udrive.com";
+  
+  // State management for database records
+  const [myBookings, setMyBookings] = useState([]);
+  const [availablePackages, setAvailablePackages] = useState([]);
+  const [availableCourses, setAvailableCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
-    // Fetch data from backend on page load
-    useEffect(() => {
-        // 1. Wait for token state to initialize to avoid false-alarm redirects on refresh
-        if (token === undefined) return; 
+  // Fetch data from backend on page load
+  useEffect(() => {
+    if (token === undefined) return; 
 
-        // 2. Core Security Guard: If token is explicitly null/empty after initialization, bounce
-        if (!token) {
-            console.log("No authorization token found. Redirecting to login...");
-            window.location.href = '/login'; 
-            return;
-        }
-
-        setLoading(true);
-
-        // 3. Include Authorization headers in case backend requires token verification
-        const fetchOptions = {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
-        Promise.all([
-            fetch('http://localhost:5000/api/bookings', fetchOptions).then(res => {
-                if (!res.ok) throw new Error(`Bookings failed: ${res.status}`);
-                return res.json();
-            }),
-            fetch('http://localhost:5000/api/packages', fetchOptions).then(res => {
-                if (!res.ok) throw new Error(`Packages failed: ${res.status}`);
-                return res.json();
-            }),
-            fetch('http://localhost:5000/api/courses', fetchOptions).then(res => {
-                if (!res.ok) throw new Error(`Courses failed: ${res.status}`);
-                return res.json();
-            })
-        ])
-        .then(([bookingsData, packagesData, coursesData]) => {
-            // 4. Safe Filtering: Match bookings by studentEmail fields
-            const userBookings = Array.isArray(bookingsData) && studentEmail
-                ? bookingsData.filter(b => b.studentEmail?.toLowerCase() === studentEmail.toLowerCase())
-                : [];
-                
-            setMyBookings(userBookings);
-            setAvailablePackages(packagesData);
-            setAvailableCourses(coursesData);
-            setLoading(false);
-        })
-        .catch(err => {
-            console.error("Error fetching profile details:", err);
-            setLoading(false);
-        });
-    }, [token, studentEmail]);
-
-    // Handle interactive instant booking form submissions
-    const handleInstantBook = async (item, type) => {
-        const confirmBooking = window.confirm(`Would you like to register an application for: ${item.name || item.title}?`);
-        if (!confirmBooking) return;
-
-        const bookingPayload = {
-            studentName: studentEmail.split('@')[0], 
-            studentEmail: studentEmail,
-            studentPhone: "98XXXXXXXX", 
-            itemType: type,
-            itemName: item.name || item.title,
-            itemPrice: item.price || item.startingPrice || 0,
-            status: 'Pending',
-            paymentStatus: 'Unpaid'
-        };
-
-        try {
-            const response = await fetch('http://localhost:5000/api/bookings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bookingPayload)
-            });
-
-            if (response.ok) {
-                const newBooking = await response.json();
-                setMyBookings([...myBookings, { _id: newBooking._id || Date.now().toString(), ...bookingPayload }]);
-                setMessage({ text: `Successfully applied for ${item.name || item.title}! Check your application table.`, type: 'success' });
-            } else {
-                throw new Error('Booking transaction rejected.');
-            }
-        } catch (error) {
-            setMessage({ text: error.message, type: 'error' });
-        }
-    };
-
-    // Handle simulated payment interface pipeline
-    const handleWalletPayment = async (bookingId, itemName, amount) => {
-        const useEsewa = window.confirm(
-            `--- uDrive Digital Checkout Gateway ---\n\n` +
-            `Item: ${itemName}\n` +
-            `Total Amount: Rs. ${amount}\n\n` +
-            `Click [OK] to pay via eSewa\n` +
-            `Click [Cancel] to pay via Khalti`
-        );
-
-        const chosenGateway = useEsewa ? "eSewa" : "Khalti";
-        
-        const walletId = window.prompt(`Enter your 10-digit ${chosenGateway} ID/Mobile Number:`);
-        if (!walletId) return; 
-        
-        const walletPin = window.prompt(`Enter your 4-digit ${chosenGateway} M-PIN:`);
-        if (!walletPin) return;
-
-        setLoading(true);
-        setMessage({ text: `Connecting to secure ${chosenGateway} nodes... Please do not close this window.`, type: 'success' });
-
-        setTimeout(async () => {
-            const fakeTxnId = "TXN-" + Math.floor(Math.random() * 10000000).toString();
-
-            try {
-                const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/pay`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        transactionId: fakeTxnId,
-                        paymentMethod: chosenGateway
-                    })
-                });
-
-                if (response.ok) {
-                    // Update state variables locally to instantly refresh table badges without page refreshes
-                    setMyBookings(prev => prev.map(b => 
-                        (b._id === bookingId || b.id === bookingId)
-                            ? { ...b, paymentStatus: 'Paid', paymentMethod: chosenGateway, transactionId: fakeTxnId, status: 'Approved' }
-                            : b
-                    ));
-                    setMessage({ text: `Payment Successful via ${chosenGateway}! Transaction Reference: ${fakeTxnId}`, type: 'success' });
-                } else {
-                    throw new Error("Payment node verification failed.");
-                }
-            } catch (error) {
-                setMessage({ text: error.message, type: 'error' });
-            } finally {
-                setLoading(false);
-            }
-        }, 2000); 
-    };
-
-    if (loading) {
-        return <div className="text-center mt-40 font-medium text-lg">Syncing profile record sheets...</div>;
+    if (!token) {
+      console.log("No authorization token found. Redirecting to login...");
+      window.location.href = '/login'; 
+      return;
     }
 
-    return (
-        <div className="min-h-screen bg-gray-50 pt-28 pb-12 px-4 md:px-8 font-sans">
-            <div className="max-w-7xl mx-auto">
-                
-                {/* Profile Header Widget */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <span className="text-xs font-bold text-yellow-600 bg-yellow-50 px-2.5 py-1 rounded-full uppercase tracking-wider">Student Dashboard</span>
-                        <h2 className="text-2xl font-bold text-gray-800 mt-2">{studentEmail}</h2>
-                        <p className="text-gray-500 text-sm mt-1">Manage enrollment slots, driving packages, and active course registration metrics.</p>
-                    </div>
-                    <button 
-                        onClick={() => { localStorage.clear(); window.location.href = '/hero'; }}
-                        className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors"
-                    >
-                        Sign Out Account
-                    </button>
-                </div>
+    setLoading(true);
 
-                {/* Toast System Notification Banner */}
-                {message.text && (
-                    <div className={`p-4 rounded-lg mb-6 font-medium text-sm ${message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-                        {message.text}
-                    </div>
-                )}
+    const fetchOptions = {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
 
-                {/* SECTION 1: Active Enrolments Ledger */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-10">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-3">My Enrolled Packages & Courses</h3>
-                    {myBookings.length === 0 ? (
-                        <p className="text-gray-400 text-sm py-4 italic">You haven't applied for any driving lessons or training packages yet.</p>
-                    ) : (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50 text-gray-500 uppercase text-xs font-semibold tracking-wider">
-                                        <th className="p-3">Course / Package Name</th>
-                                        <th className="p-3">Category</th>
-                                        <th className="p-3">Price</th>
-                                        <th className="p-3">Application Date</th>
-                                        <th className="p-3 text-center">Status</th>
-                                        <th className="p-3 text-center">Payment</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm divide-y divide-gray-100">
-                                    {myBookings.map((booking) => (
-                                        <tr key={booking._id || booking.id} className="hover:bg-gray-50/50">
-                                            {/* Normalizes alternate model field layout tags cleanly */}
-                                            <td className="p-3 font-semibold text-gray-700">
-                                                {booking.itemName || booking.courseName}
-                                            </td>
-                                            <td className="p-3 text-gray-500 capitalize">
-                                                <span className={`px-2.5 py-0.5 rounded font-bold text-[11px] ${
-                                                    (booking.itemType?.toLowerCase() === 'course' || booking.category?.toLowerCase() === 'course')
-                                                        ? 'bg-blue-100 text-blue-800'
-                                                        : 'bg-amber-100 text-amber-800'
-                                                }`}>
-                                                    {booking.itemType || booking.category || 'Package'}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 font-medium text-gray-900">
-                                                {/* Displays cleanly whether it includes custom strings or raw numbers */}
-                                                {typeof booking.itemPrice === 'string' || typeof booking.price === 'string'
-                                                    ? (booking.itemPrice || booking.price)
-                                                    : `Rs. ${booking.itemPrice || booking.price || 0}`
-                                                }
-                                            </td>
-                                            <td className="p-3 text-gray-400">
-                                                {new Date(booking.bookingDate || booking.applicationDate || Date.now()).toLocaleDateString()}
-                                            </td>
-                                            <td className="p-3 text-center">
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                                    (booking.status === 'Approved' || booking.status === 'Success!') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                    {booking.status || 'Pending'}
-                                                </span>
-                                            </td>
-                                            <td className="p-3 text-center">
-                                                {(booking.paymentStatus === 'Paid' || booking.payment === 'Paid via Wallet') ? (
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] font-extrabold px-2.5 py-1 rounded">
-                                                            ✓ Paid via {booking.paymentMethod || 'Wallet'}
-                                                        </span>
-                                                        {booking.transactionId && (
-                                                            <span className="text-[10px] text-gray-400 font-mono mt-0.5">{booking.transactionId}</span>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <button 
-                                                        onClick={() => handleWalletPayment(booking._id || booking.id, booking.itemName || booking.courseName, booking.itemPrice || booking.price)}
-                                                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
-                                                    >
-                                                        Pay Now
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
+    Promise.all([
+      fetch('http://localhost:5000/api/bookings', fetchOptions).then(res => {
+        if (!res.ok) throw new Error(`Bookings failed: ${res.status}`);
+        return res.json();
+      }),
+      fetch('http://localhost:5000/api/packages', fetchOptions).then(res => {
+        if (!res.ok) throw new Error(`Packages failed: ${res.status}`);
+        return res.json();
+      }),
+      fetch('http://localhost:5000/api/courses', fetchOptions).then(res => {
+        if (!res.ok) throw new Error(`Courses failed: ${res.status}`);
+        return res.json();
+      })
+    ])
+    .then(([bookingsData, packagesData, coursesData]) => {
+      const userBookings = Array.isArray(bookingsData) && studentEmail
+        ? bookingsData.filter(b => b.studentEmail?.toLowerCase() === studentEmail.toLowerCase())
+        : [];
+          
+      setMyBookings(userBookings);
+      setAvailablePackages(packagesData);
+      setAvailableCourses(coursesData);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error("Error fetching profile details:", err);
+      setLoading(false);
+    });
+  }, [token, studentEmail]);
 
-                {/* SECTION 2: Available Catalog Rows */}
-                <h3 className="text-xl font-bold text-gray-800 mb-6">Explore Available Educational Programs</h3>
+  // Handle interactive instant booking form submissions
+  const handleInstantBook = async (item, type) => {
+    const confirmBooking = window.confirm(`Would you like to register an application for: ${item.name || item.title}?`);
+    if (!confirmBooking) return;
 
-                {/* Sub-Catalog A: Driving Packages */}
-                <h4 className="text-md font-bold text-gray-600 mb-4 uppercase tracking-wide">Training Packages</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                    {availablePackages.map((pkg) => (
-                        <div key={pkg.id || pkg._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col justify-between hover:shadow-md transition-shadow relative">
-                            {pkg.isPopular && (
-                                <span className="absolute -top-2.5 right-4 bg-yellow-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Popular</span>
-                            )}
-                            <div>
-                                <h5 className="font-bold text-gray-800 text-lg">{pkg.name}</h5>
-                                <p className="text-gray-400 text-xs italic mt-0.5">{pkg.tagline || 'Comprehensive field training session'}</p>
-                                <div className="mt-3 flex items-baseline gap-1 text-gray-900">
-                                    <span className="text-2xl font-black">Rs. {pkg.price}</span>
-                                    <span className="text-gray-400 text-xs">/ package</span>
-                                </div>
-                                <ul className="mt-4 space-y-2 text-xs text-gray-600 border-t pt-3">
-                                    <li>🚗 **Model:** {pkg.carType || 'Standard Training Car'}</li>
-                                    <li>⏳ **Duration:** {pkg.durationDays || 30} Days ({pkg.hoursPerDay || 1} Hr/Day)</li>
-                                    <li>📖 **Lessons:** {pkg.theoryLessons || 0} Theory | {pkg.practicalLessons || 0} Practical</li>
-                                    <li>📍 **Pickup:** {pkg.freePickup ? 'Free Home Pickup Included' : 'Standard Center Station'}</li>
-                                </ul>
-                            </div>
-                            <button 
-                                onClick={() => handleInstantBook(pkg, 'package')}
-                                className="w-full mt-5 bg-yellow-500 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-yellow-600 transition-colors"
-                            >
-                                Book Training Package
-                            </button>
-                        </div>
-                    ))}
-                </div>
+    const bookingPayload = {
+      studentName: studentEmail.split('@')[0], 
+      studentEmail: studentEmail,
+      studentPhone: "98XXXXXXXX", 
+      itemType: type,
+      itemName: item.name || item.title,
+      itemPrice: item.price || item.startingPrice || 0,
+      status: 'Pending',
+      paymentStatus: 'Unpaid'
+    };
 
-                {/* Sub-Catalog B: Academic Courses */}
-                <h4 className="text-md font-bold text-gray-600 mb-4 uppercase tracking-wide">License Courses</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {availableCourses.map((course) => (
-                        <div key={course.id || course._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col md:flex-row gap-4 items-start hover:shadow-md transition-shadow">
-                            <div className="w-full md:w-32 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 border">
-                                <img 
-                                    src={`http://localhost:5000/${course.image || 'src/images/6.jpg'}`} 
-                                    alt={course.title}
-                                    onError={(e) => { e.target.src = 'https://placehold.co/150x100?text=Driving+Course'; }}
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
-                            <div className="flex-1 flex flex-col justify-between h-full min-w-0">
-                                <div>
-                                    <h5 className="font-bold text-gray-800 text-base truncate">{course.title}</h5>
-                                    <p className="text-gray-500 text-xs mt-1 line-clamp-2">{course.description}</p>
-                                    <div className="mt-2 flex gap-4 text-[11px] text-gray-400">
-                                        <span>📘 Theory: **{course.theoryHours || 0} Hrs**</span>
-                                        <span>🚘 Practical: **{course.practicalHours || 0} Hrs**</span>
-                                    </div>
-                                </div>
-                                <div className="mt-4 flex items-center justify-between gap-2 border-t pt-3">
-                                    <div>
-                                        <span className="text-xs text-gray-400 block">Tuition Starts At</span>
-                                        <span className="font-bold text-gray-900 text-base">Rs. {course.startingPrice}</span>
-                                    </div>
-                                    <button 
-                                        onClick={() => handleInstantBook(course, 'course')}
-                                        className="bg-gray-900 text-white font-bold px-4 py-2 rounded-md text-xs hover:bg-gray-800 transition-colors"
-                                    >
-                                        Enroll Course
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+    try {
+      const response = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingPayload)
+      });
 
-            </div>
-        </div>
+      if (response.ok) {
+        const newBooking = await response.json();
+        setMyBookings([...myBookings, { _id: newBooking._id || Date.now().toString(), ...bookingPayload }]);
+        setMessage({ text: `Successfully applied for ${item.name || item.title}! Check your application table.`, type: 'success' });
+      } else {
+        throw new Error('Booking transaction rejected.');
+      }
+    } catch (error) {
+      setMessage({ text: error.message, type: 'error' });
+    }
+  };
+
+  // Handle simulated payment interface pipeline
+  const handleWalletPayment = async (bookingId, itemName, amount) => {
+    const useEsewa = window.confirm(
+      `--- uDrive Digital Checkout Gateway ---\n\n` +
+      `Item: ${itemName}\n` +
+      `Total Amount: Rs. ${amount}\n\n` +
+      `Click [OK] to pay via eSewa\n` +
+      `Click [Cancel] to pay via Khalti`
     );
+
+    const chosenGateway = useEsewa ? "eSewa" : "Khalti";
+    
+    const walletId = window.prompt(`Enter your 10-digit ${chosenGateway} ID/Mobile Number:`);
+    if (!walletId) return; 
+    
+    const walletPin = window.prompt(`Enter your 4-digit ${chosenGateway} M-PIN:`);
+    if (!walletPin) return;
+
+    setLoading(true);
+    setMessage({ text: `Connecting to secure ${chosenGateway} nodes... Please do not close this window.`, type: 'success' });
+
+    setTimeout(async () => {
+      const fakeTxnId = "TXN-" + Math.floor(Math.random() * 10000000).toString();
+
+      try {
+        const response = await fetch(`http://localhost:5000/api/bookings/${bookingId}/pay`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transactionId: fakeTxnId,
+            paymentMethod: chosenGateway
+          })
+        });
+
+        if (response.ok) {
+          setMyBookings(prev => prev.map(b => 
+            (b._id === bookingId || b.id === bookingId)
+              ? { ...b, paymentStatus: 'Paid', paymentMethod: chosenGateway, transactionId: fakeTxnId, status: 'Approved' }
+              : b
+          ));
+          setMessage({ text: `Payment Successful via ${chosenGateway}! Reference: ${fakeTxnId}`, type: 'success' });
+        } else {
+          throw new Error("Payment node verification failed.");
+        }
+      } catch (error) {
+        setMessage({ text: error.message, type: 'error' });
+      } finally {
+        setLoading(false);
+      }
+    }, 2000); 
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
+        <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Syncing account records...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50/50 pt-28 pb-20 px-4 md:px-8 font-sans antialiased text-slate-600">
+      <div className="max-w-7xl mx-auto space-y-10">
+        
+        {/* =========================================================================
+            1. DASHBOARD HEADER PROFILE CARD
+            ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center font-black text-xl shadow-md">
+              {studentEmail.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-black tracking-wider text-amber-700 bg-amber-400/10 px-2.5 py-0.5 rounded-full uppercase">
+                  Student Member
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-black text-slate-900 mt-1 tracking-tight">{studentEmail}</h2>
+              <p className="text-slate-400 text-xs mt-0.5">Manage enrollment status metrics, curriculum items, and session schedules.</p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => { localStorage.clear(); window.location.href = '/hero'; }}
+            className="w-full md:w-auto bg-slate-100 text-slate-700 px-5 py-3 rounded-xl text-xs font-bold hover:bg-slate-200/80 active:scale-95 transition cursor-pointer"
+          >
+            Terminate Session
+          </button>
+        </div>
+
+        {/* Dynamic Context Status Notification Banner */}
+        {message.text && (
+          <div className={`p-4 rounded-xl font-semibold text-xs border transition-all duration-300 flex items-center gap-2.5 ${
+            message.type === 'success' 
+              ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20' 
+              : 'bg-rose-500/10 text-rose-700 border-rose-500/20'
+          }`}>
+            <span className="font-mono text-base">›</span> {message.text}
+          </div>
+        )}
+
+        {/* =========================================================================
+            2. ACTIVE ENROLMENTS LEDGER TABLE
+            ========================================================================= */}
+        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-black text-slate-900 tracking-tight">Registered Training Modules</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Your personalized real-time track log for current applications.</p>
+            </div>
+            <span className="text-[10px] font-mono bg-slate-100 px-2.5 py-1 rounded-md font-bold text-slate-500">
+              Total Records: {myBookings.length}
+            </span>
+          </div>
+
+          {myBookings.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="text-slate-300 text-3xl mb-2">🚗</div>
+              <p className="text-slate-400 text-xs italic">No driving modules or license courses registered on this identity profile.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-400 uppercase text-[10px] font-bold tracking-widest border-b border-slate-100">
+                    <th className="p-4 pl-6">Curriculum Track</th>
+                    <th className="p-4">Classification</th>
+                    <th className="p-4">Tuition Value</th>
+                    <th className="p-4">Timestamp Log</th>
+                    <th className="p-4 text-center">Verification Status</th>
+                    <th className="p-4 text-right pr-6">Accounting/Gateway Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="text-xs divide-y divide-slate-100 text-slate-600 font-medium">
+                  {myBookings.map((booking) => (
+                    <tr key={booking._id || booking.id} className="hover:bg-slate-50/40 transition">
+                      <td className="p-4 pl-6 font-bold text-slate-900">
+                        {booking.itemName || booking.courseName}
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-2 py-0.5 rounded-md font-bold text-[9px] uppercase tracking-wide ${
+                          (booking.itemType?.toLowerCase() === 'course' || booking.category?.toLowerCase() === 'course')
+                            ? 'bg-blue-500/10 text-blue-600'
+                            : 'bg-indigo-500/10 text-indigo-600'
+                        }`}>
+                          {booking.itemType || booking.category || 'Package'}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-slate-900">
+                        {typeof booking.itemPrice === 'string' || typeof booking.price === 'string'
+                          ? (booking.itemPrice || booking.price)
+                          : `Rs. ${booking.itemPrice || booking.price || 0}`}
+                      </td>
+                      <td className="p-4 text-slate-400">
+                        {new Date(booking.bookingDate || booking.applicationDate || Date.now()).toLocaleDateString('en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric'
+                        })}
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          (booking.status === 'Approved' || booking.status === 'Success!') 
+                            ? 'bg-emerald-500/10 text-emerald-700' 
+                            : 'bg-amber-500/10 text-amber-700'
+                        }`}>
+                          ● {booking.status || 'Pending Verification'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right pr-6">
+                        {(booking.paymentStatus === 'Paid' || booking.payment === 'Paid via Wallet') ? (
+                          <div className="inline-flex flex-col items-end">
+                            <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                              Released via {booking.paymentMethod || 'Wallet'}
+                            </span>
+                            {booking.transactionId && (
+                              <span className="text-[9px] text-slate-400 font-mono mt-1 tracking-tight">{booking.transactionId}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => handleWalletPayment(booking._id || booking.id, booking.itemName || booking.courseName, booking.itemPrice || booking.price)}
+                            className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-2 rounded-xl transition shadow-sm cursor-pointer"
+                          >
+                            Execute Settlement
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* =========================================================================
+            3. INTERACTIVE CURRICULUM CATALOGS
+            ========================================================================= */}
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-lg font-black text-slate-900 tracking-tight">Available Curriculums & Tracks</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Instantly acquire additional instructional hours or defensive certification components.</p>
+          </div>
+
+          {/* Sub-Catalog A: Driving Training Packages */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="h-px bg-slate-200 flex-1" />
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Practical Field Packages</h4>
+              <span className="h-px bg-slate-200 flex-1" />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {availablePackages.map((pkg) => (
+                <div key={pkg.id || pkg._id} className="bg-white rounded-2xl border border-slate-200/60 p-6 flex flex-col justify-between hover:shadow-md transition relative overflow-hidden group">
+                  {pkg.isPopular && (
+                    <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest">
+                      Popular Track
+                    </span>
+                  )}
+                  <div>
+                    <h5 className="font-black text-slate-900 text-base tracking-tight">{pkg.name}</h5>
+                    <p className="text-slate-400 text-[11px] italic mt-0.5">{pkg.tagline || 'Defensive roadmap training module'}</p>
+                    
+                    <div className="mt-4 flex items-baseline gap-1 text-slate-900">
+                      <span className="text-xl font-black tracking-tight">Rs. {pkg.price}</span>
+                      <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">/ Slot</span>
+                    </div>
+
+                    <div className="mt-5 space-y-2.5 text-xs text-slate-600 border-t border-slate-100 pt-4 font-medium">
+                      <div className="flex justify-between"><span className="text-slate-400">Fleet Class:</span> <span className="font-bold text-slate-800">{pkg.carType || 'Standard Transmission'}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">Duration:</span> <span className="font-bold text-slate-800">{pkg.durationDays || 30} Days ({pkg.hoursPerDay || 1} Hr/Day)</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">Splits:</span> <span className="font-bold text-slate-800">{pkg.theoryLessons || 0} Theory | {pkg.practicalLessons || 0} Road</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">Logistics:</span> <span className="font-bold text-slate-800 text-[11px]">{pkg.freePickup ? '✓ Complimentary Pickup' : 'Station Intake'}</span></div>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={() => handleInstantBook(pkg, 'package')}
+                    className="w-full mt-6 bg-slate-900 text-white font-black text-[10px] uppercase tracking-wider py-3.5 rounded-xl hover:bg-slate-800 active:scale-[0.99] transition cursor-pointer"
+                  >
+                    Instantly Request Package
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Sub-Catalog B: Academic License Courses */}
+          <div className="space-y-4 pt-4">
+            <div className="flex items-center gap-2">
+              <span className="h-px bg-slate-200 flex-1" />
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Licensing Core</h4>
+              <span className="h-px bg-slate-200 flex-1" />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {availableCourses.map((course) => (
+                <div key={course.id || course._id} className="bg-white rounded-2xl border border-slate-200/60 p-5 flex flex-col sm:flex-row gap-5 hover:shadow-md transition">
+                  <div className="w-full sm:w-32 h-28 bg-slate-950 rounded-xl overflow-hidden flex-shrink-0 border border-slate-800 relative">
+                    <img 
+                      src={`http://localhost:5000/${course.image || 'src/images/6.jpg'}`} 
+                      alt={course.title}
+                      onError={(e) => { e.target.src = 'https://placehold.co/150x100?text=Udrive+Academy'; }}
+                      className="w-full h-full object-cover opacity-80"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent opacity-40" />
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
+                    <div>
+                      <h5 className="font-black text-slate-900 text-base tracking-tight truncate">{course.title}</h5>
+                      <p className="text-slate-400 text-xs mt-1 line-clamp-2 leading-relaxed">{course.description}</p>
+                      
+                      <div className="mt-3 flex gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">📘 Theory: {course.theoryHours || 0} Hrs</span>
+                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">🚘 Road: {course.practicalHours || 0} Hrs</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-100 pt-3.5">
+                      <div>
+                        <span className="text-[9px] text-slate-400 uppercase font-bold block tracking-wider">Tuition Base</span>
+                        <span className="font-black text-slate-900 text-base tracking-tight">Rs. {course.startingPrice}</span>
+                      </div>
+                      <button 
+                        onClick={() => handleInstantBook(course, 'course')}
+                        className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-xl text-[10px] uppercase tracking-wider transition active:scale-95 cursor-pointer"
+                      >
+                        Enroll Track
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  );
 }

@@ -215,7 +215,7 @@ export default function HomeContent() {
                       {/* Pricing Display */}
                       <div className={`text-center py-5 rounded-xl mb-6 ${pkg.isPopular ? 'bg-slate-900/60' : 'bg-slate-50'}`}>
                         <div className={pkg.isPopular ? 'text-amber-400' : 'text-slate-900'}>
-                          <span className="text-sm font-bold align-top">$</span>
+                          <span className="text-sm font-bold align-top">Rs </span>
                           <span className="text-5xl font-black tracking-tight">{dollars}</span>
                           <span className="text-sm font-bold">.{cents}</span>
                         </div>
@@ -338,7 +338,7 @@ export default function HomeContent() {
                     Starting From
                   </p>
                   <p className="text-3xl font-black text-slate-950">
-                    ${course.startingPrice}
+                    Rs{course.startingPrice}
                   </p>
                 </div>
               </div>

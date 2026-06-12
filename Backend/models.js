@@ -74,6 +74,16 @@ const UserSchema = new mongoose.Schema({
     role: { type: String, default: 'user' } // 'user' = Student, 'admin' = Owner
 }, { timestamps: true });
 
+const TeamSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    title: { type: String, required: true },
+    bio: { type: String, required: true },
+    image: { type: String, required: true },
+    fbUrl: { type: String, default: "" },
+    twUrl: { type: String, default: "" },
+    lnUrl: { type: String, default: "" }
+}, { timestamps: true });
+
 
 
 const Package = mongoose.models.Package || mongoose.model('Package', PackageSchema);
@@ -83,5 +93,6 @@ const Blog = mongoose.models.Blog || mongoose.model('Blog', BlogSchema);
 const PageSetting = mongoose.models.PageSetting || mongoose.model('PageSetting', PageSettingsSchema);
 const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
+const Team = mongoose.models.Team || mongoose.model('Team', TeamSchema);
 
-module.exports = { Package, Course, Booking, Blog, PageSetting, Contact, User};
+module.exports = { Package, Course, Booking, Blog, PageSetting, Contact, User, Team};
