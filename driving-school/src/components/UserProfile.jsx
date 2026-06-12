@@ -14,65 +14,66 @@ export default function UserProfile() {
 
     // Fetch data from backend on page load
     useEffect(() => {
-    // 1. Wait for token state to initialize to avoid false-alarm redirects on refresh
-    if (token === undefined) return; 
+        // 1. Wait for token state to initialize to avoid false-alarm redirects on refresh
+        if (token === undefined) return; 
 
-    // 2. Core Security Guard: If token is explicitly null/empty after initialization, bounce
-    if (!token) {
-        console.log("No authorization token found. Redirecting to login...");
-        window.location.href = '/userprofile'; 
-        return;
-    }
-
-    setLoading(true);
-
-    // 3. Include Authorization headers in case backend requires token verification
-    const fetchOptions = {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+        // 2. Core Security Guard: If token is explicitly null/empty after initialization, bounce
+        if (!token) {
+            console.log("No authorization token found. Redirecting to login...");
+            window.location.href = '/login'; 
+            return;
         }
-    };
 
-    Promise.all([
-        fetch('http://localhost:5000/api/bookings', fetchOptions).then(res => {
-            if (!res.ok) throw new Error(`Bookings failed: ${res.status}`);
-            return res.json();
-        }),
-        fetch('http://localhost:5000/api/packages', fetchOptions).then(res => {
-            if (!res.ok) throw new Error(`Packages failed: ${res.status}`);
-            return res.json();
-        }),
-        fetch('http://localhost:5000/api/courses', fetchOptions).then(res => {
-            if (!res.ok) throw new Error(`Courses failed: ${res.status}`);
-            return res.json();
+        setLoading(true);
+
+        // 3. Include Authorization headers in case backend requires token verification
+        const fetchOptions = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        Promise.all([
+            fetch('http://localhost:5000/api/bookings', fetchOptions).then(res => {
+                if (!res.ok) throw new Error(`Bookings failed: ${res.status}`);
+                return res.json();
+            }),
+            fetch('http://localhost:5000/api/packages', fetchOptions).then(res => {
+                if (!res.ok) throw new Error(`Packages failed: ${res.status}`);
+                return res.json();
+            }),
+            fetch('http://localhost:5000/api/courses', fetchOptions).then(res => {
+                if (!res.ok) throw new Error(`Courses failed: ${res.status}`);
+                return res.json();
+            })
+        ])
+        .then(([bookingsData, packagesData, coursesData]) => {
+            // 4. Safe Filtering: Match bookings by studentEmail fields
+            const userBookings = Array.isArray(bookingsData) && studentEmail
+                ? bookingsData.filter(b => b.studentEmail?.toLowerCase() === studentEmail.toLowerCase())
+                : [];
+                
+            setMyBookings(userBookings);
+            setAvailablePackages(packagesData);
+            setAvailableCourses(coursesData);
+            setLoading(false);
         })
-    ])
-    .then(([bookingsData, packagesData, coursesData]) => {
-        // 4. Safe Filtering: Ensure we have a valid studentEmail before filtering
-        const userBookings = Array.isArray(bookingsData) && studentEmail
-            ? bookingsData.filter(b => b.studentEmail?.toLowerCase() === studentEmail.toLowerCase())
-            : [];
-            
-        setMyBookings(userBookings);
-        setAvailablePackages(packagesData);
-        setAvailableCourses(coursesData);
-        setLoading(false);
-    })
-    .catch(err => {
-        console.error("Error fetching profile details:", err);
-        setLoading(false);
-    });
-}, [token, studentEmail]);
+        .catch(err => {
+            console.error("Error fetching profile details:", err);
+            setLoading(false);
+        });
+    }, [token, studentEmail]);
+
     // Handle interactive instant booking form submissions
     const handleInstantBook = async (item, type) => {
         const confirmBooking = window.confirm(`Would you like to register an application for: ${item.name || item.title}?`);
         if (!confirmBooking) return;
 
         const bookingPayload = {
-            studentName: studentEmail.split('@')[0], // Fallback nickname from email address
+            studentName: studentEmail.split('@')[0], 
             studentEmail: studentEmail,
-            studentPhone: "98XXXXXXXX", // Placeholder to satisfy backend schema rules
+            studentPhone: "98XXXXXXXX", 
             itemType: type,
             itemName: item.name || item.title,
             itemPrice: item.price || item.startingPrice || 0,
@@ -89,7 +90,7 @@ export default function UserProfile() {
 
             if (response.ok) {
                 const newBooking = await response.json();
-                setMyBookings([...myBookings, { id: newBooking._id || Date.now().toString(), ...bookingPayload }]);
+                setMyBookings([...myBookings, { _id: newBooking._id || Date.now().toString(), ...bookingPayload }]);
                 setMessage({ text: `Successfully applied for ${item.name || item.title}! Check your application table.`, type: 'success' });
             } else {
                 throw new Error('Booking transaction rejected.');
@@ -101,7 +102,6 @@ export default function UserProfile() {
 
     // Handle simulated payment interface pipeline
     const handleWalletPayment = async (bookingId, itemName, amount) => {
-        // 1. Prompt user to choose gateway setup
         const useEsewa = window.confirm(
             `--- uDrive Digital Checkout Gateway ---\n\n` +
             `Item: ${itemName}\n` +
@@ -112,18 +112,15 @@ export default function UserProfile() {
 
         const chosenGateway = useEsewa ? "eSewa" : "Khalti";
         
-        // 2. Simulate entering wallet PIN credentials
         const walletId = window.prompt(`Enter your 10-digit ${chosenGateway} ID/Mobile Number:`);
-        if (!walletId) return; // User cancelled execution
+        if (!walletId) return; 
         
         const walletPin = window.prompt(`Enter your 4-digit ${chosenGateway} M-PIN:`);
         if (!walletPin) return;
 
-        // 3. Initiate client loader screen state
         setLoading(true);
         setMessage({ text: `Connecting to secure ${chosenGateway} nodes... Please do not close this window.`, type: 'success' });
 
-        // 4. Simulate a short processing latency delay
         setTimeout(async () => {
             const fakeTxnId = "TXN-" + Math.floor(Math.random() * 10000000).toString();
 
@@ -138,22 +135,14 @@ export default function UserProfile() {
                 });
 
                 if (response.ok) {
-    const newBooking = await response.json();
-    
-    // Extract the ID cleanly depending on how your backend structure wraps the saved object response
-    const actualDatabaseId = newBooking._id || newBooking.booking?._id || Date.now().toString();
-
-    setMyBookings([
-        ...myBookings, 
-        { 
-            _id: actualDatabaseId, // explicitly assign both fields to avoid lookup gaps
-            id: actualDatabaseId, 
-            ...bookingPayload 
-        }
-    ]);
-    
-    setMessage({ text: `Successfully applied for ${item.name || item.title}! Check your application table.`, type: 'success' });
-}else {
+                    // Update state variables locally to instantly refresh table badges without page refreshes
+                    setMyBookings(prev => prev.map(b => 
+                        (b._id === bookingId || b.id === bookingId)
+                            ? { ...b, paymentStatus: 'Paid', paymentMethod: chosenGateway, transactionId: fakeTxnId, status: 'Approved' }
+                            : b
+                    ));
+                    setMessage({ text: `Payment Successful via ${chosenGateway}! Transaction Reference: ${fakeTxnId}`, type: 'success' });
+                } else {
                     throw new Error("Payment node verification failed.");
                 }
             } catch (error) {
@@ -161,7 +150,7 @@ export default function UserProfile() {
             } finally {
                 setLoading(false);
             }
-        }, 2000); // 2-second mock processing window
+        }, 2000); 
     };
 
     if (loading) {
@@ -214,20 +203,39 @@ export default function UserProfile() {
                                 </thead>
                                 <tbody className="text-sm divide-y divide-gray-100">
                                     {myBookings.map((booking) => (
-                                        <tr key={booking.id || booking._id} className="hover:bg-gray-50/50">
-                                            <td className="p-3 font-semibold text-gray-700">{booking.itemName}</td>
-                                            <td className="p-3 text-gray-500 capitalize">{booking.itemType}</td>
-                                            <td className="p-3 font-medium text-gray-900">Rs. {booking.itemPrice}</td>
-                                            <td className="p-3 text-gray-400">{new Date(booking.bookingDate || Date.now()).toLocaleDateString()}</td>
+                                        <tr key={booking._id || booking.id} className="hover:bg-gray-50/50">
+                                            {/* Normalizes alternate model field layout tags cleanly */}
+                                            <td className="p-3 font-semibold text-gray-700">
+                                                {booking.itemName || booking.courseName}
+                                            </td>
+                                            <td className="p-3 text-gray-500 capitalize">
+                                                <span className={`px-2.5 py-0.5 rounded font-bold text-[11px] ${
+                                                    (booking.itemType?.toLowerCase() === 'course' || booking.category?.toLowerCase() === 'course')
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-amber-100 text-amber-800'
+                                                }`}>
+                                                    {booking.itemType || booking.category || 'Package'}
+                                                </span>
+                                            </td>
+                                            <td className="p-3 font-medium text-gray-900">
+                                                {/* Displays cleanly whether it includes custom strings or raw numbers */}
+                                                {typeof booking.itemPrice === 'string' || typeof booking.price === 'string'
+                                                    ? (booking.itemPrice || booking.price)
+                                                    : `Rs. ${booking.itemPrice || booking.price || 0}`
+                                                }
+                                            </td>
+                                            <td className="p-3 text-gray-400">
+                                                {new Date(booking.bookingDate || booking.applicationDate || Date.now()).toLocaleDateString()}
+                                            </td>
                                             <td className="p-3 text-center">
                                                 <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                                    booking.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                    (booking.status === 'Approved' || booking.status === 'Success!') ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
-                                                    {booking.status}
+                                                    {booking.status || 'Pending'}
                                                 </span>
                                             </td>
                                             <td className="p-3 text-center">
-                                                {booking.paymentStatus === 'Paid' ? (
+                                                {(booking.paymentStatus === 'Paid' || booking.payment === 'Paid via Wallet') ? (
                                                     <div className="flex flex-col items-center">
                                                         <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] font-extrabold px-2.5 py-1 rounded">
                                                             ✓ Paid via {booking.paymentMethod || 'Wallet'}
@@ -238,7 +246,7 @@ export default function UserProfile() {
                                                     </div>
                                                 ) : (
                                                     <button 
-                                                        onClick={() => handleWalletPayment(booking._id || booking.id, booking.itemName, booking.itemPrice)}
+                                                        onClick={() => handleWalletPayment(booking._id || booking.id, booking.itemName || booking.courseName, booking.itemPrice || booking.price)}
                                                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-sm"
                                                     >
                                                         Pay Now
@@ -299,7 +307,6 @@ export default function UserProfile() {
                                     alt={course.title}
                                     onError={(e) => { e.target.src = 'https://placehold.co/150x100?text=Driving+Course'; }}
                                     className="w-full h-full object-cover"
-                                
                                 />
                             </div>
                             <div className="flex-1 flex flex-col justify-between h-full min-w-0">

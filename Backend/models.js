@@ -49,12 +49,12 @@ const BlogSchema = new mongoose.Schema({
 });
 
 const PageSettingsSchema = new mongoose.Schema({
-    _id: { type: String, required: true },
-    tuitionCost: Number,
-    theoryHours: Number,
-    behindWheelHours: Number,
-    courseLengthDays: Number,
-    instructorName: String
+    _id: { type: String, required: true }, // We use a hardcoded string ID like "standard_driving_page"
+    tuitionCost: { type: Number, default: 64 },
+    theoryHours: { type: Number, default: 4 },
+    behindWheelHours: { type: Number, default: 18 },
+    courseLengthDays: { type: Number, default: 30 },
+    instructorName: { type: String, default: "Isaac Herman" }
 }, { collection: 'page_settings' });
 
 const contactSchema = new mongoose.Schema({
@@ -74,6 +74,8 @@ const UserSchema = new mongoose.Schema({
     role: { type: String, default: 'user' } // 'user' = Student, 'admin' = Owner
 }, { timestamps: true });
 
+
+
 const Package = mongoose.models.Package || mongoose.model('Package', PackageSchema);
 const Course = mongoose.models.Course || mongoose.model('Course', CourseSchema);
 const Booking = mongoose.models.Booking || mongoose.model('Booking', BookingSchema);
@@ -82,4 +84,4 @@ const PageSetting = mongoose.models.PageSetting || mongoose.model('PageSetting',
 const Contact = mongoose.models.Contact || mongoose.model('Contact', contactSchema);
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-module.exports = { Package, Course, Booking, Blog, PageSetting, Contact, User };
+module.exports = { Package, Course, Booking, Blog, PageSetting, Contact, User};

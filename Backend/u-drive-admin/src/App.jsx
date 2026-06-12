@@ -2,12 +2,184 @@
 import React, { useState } from 'react';
 import { Admin, Resource, fetchUtils, ListGuesser, useLogin, useNotify } from 'react-admin';
 import simpleRestProvider from 'ra-data-simple-rest';
+import { createTheme } from '@mui/material/styles'; // 💡 Required to compile the custom theme engine
 
 import { PackageList, PackageEdit, PackageCreate } from './packages';
 import { CourseList, CourseEdit, CourseCreate } from './courses';
 import { BookingList } from './BookingList';
 import { Dashboard } from './Dashboard';
 import { BlogList, BlogEdit, BlogCreate } from './Blogs';
+import { CourseSettingsEdit } from './CourseSettings';
+import SettingsAccessibilityIcon from '@mui/icons-material/SettingsAccessibility';
+
+// ==========================================
+// 💅 THE SNEAKY MODERN SAAS THEME DEFINITION
+// ==========================================
+// ==========================================
+// 🚀 PREMIUM GRAPHICS ENGINE THEME CONFIGURATION
+// ==========================================
+const modernDarkTheme = createTheme({
+    palette: {
+        mode: 'dark',
+        primary: {
+            main: '#f59e0b',    // Accent color matching your main landing logo
+        },
+        secondary: {
+            main: '#38bdf8',    // Cyan highlight tone for data badges
+        },
+        background: {
+            default: '#0f111a', // Deep charcoal-sapphire canvas matrix
+            paper: '#161925',   // Elevated card background color
+        },
+        text: {
+            primary: '#f8fafc',  // Crisp title header text
+            secondary: '#94a3b8', // Low-contrast descriptive utility label text
+        },
+        divider: 'rgba(255, 255, 255, 0.05)', // Super clean hairline boundaries
+    },
+    typography: {
+        fontFamily: '"Inter", "Segoe UI", Roboto, sans-serif',
+        h6: {
+            fontWeight: 800,
+            letterSpacing: '-0.025em',
+            color: '#ffffff',
+        },
+        button: {
+            textTransform: 'none',
+            fontWeight: '600',
+            fontSize: '0.825rem',
+        },
+    },
+    components: {
+        // 1. Top Navbar Header Layer Override
+        MuiAppBar: {
+            styleOverrides: {
+                colorDefault: {
+                    backgroundColor: '#161925',
+                    backgroundImage: 'none',
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+                    boxShadow: 'none',
+                },
+            },
+        },
+        // 2. Left Structural Application Navigation Sidebar
+        MuiSidebar: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#161925',
+                    borderRight: '1px solid rgba(255, 255, 255, 0.04)',
+                    '& .RaMenuItemLink-root': {
+                        borderRadius: '10px',
+                        margin: '4px 12px',
+                        padding: '10px 16px',
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        color: '#94a3b8',
+                        transition: 'all 0.15s ease-in-out',
+                        '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                            color: '#ffffff',
+                        },
+                    },
+                    '& .RaMenuItemLink-active': {
+                        color: '#f59e0b',
+                        fontWeight: '700',
+                        backgroundColor: 'rgba(245, 158, 11, 0.08) !important',
+                        '& .MuiSvgIcon-root': {
+                            color: '#f59e0b',
+                        },
+                    },
+                },
+            },
+        },
+        // 3. Elegant Structural Cards (The main content wrappers)
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundImage: 'none',
+                },
+                elevation1: {
+                    boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.4)',
+                    borderRadius: '16px',
+                    backgroundColor: '#161925',
+                    border: '1px solid rgba(255, 255, 255, 0.03)',
+                    padding: '8px',
+                },
+            },
+        },
+        // 4. Clean Analytical Data Sheets Tables Layout
+        MuiTable: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: 'transparent',
+                },
+            },
+        },
+        MuiTableCell: {
+            styleOverrides: {
+                root: {
+                    borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                    padding: '16px 20px',
+                    fontSize: '0.85rem',
+                },
+                head: {
+                    backgroundColor: '#11131c',
+                    fontWeight: '700',
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                    color: '#f59e0b',
+                },
+            },
+        },
+        MuiTableRow: {
+            styleOverrides: {
+                root: {
+                    transition: 'background-color 0.15s ease',
+                    '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.01) !important',
+                    },
+                },
+            },
+        },
+        // 5. Button and Interface Actions Customizations
+        MuiButton: {
+            styleOverrides: {
+                contained: {
+                    boxShadow: 'none',
+                    borderRadius: '10px',
+                    padding: '8px 18px',
+                    '&:hover': {
+                        boxShadow: '0 4px 12px rgba(245, 158, 11, 0.2)',
+                    },
+                },
+                outlined: {
+                    borderRadius: '10px',
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                    },
+                },
+            },
+        },
+        // 6. Native Data Filter Inputs Form Modulators
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    borderRadius: '10px',
+                    backgroundColor: '#0f111a',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.05)',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: 'rgba(255, 255, 255, 0.15)',
+                    },
+                },
+            },
+        },
+    },
+});
 
 // 1. Authenticated HTTP Client
 const httpClient = (url, options = {}) => {
@@ -20,8 +192,6 @@ const httpClient = (url, options = {}) => {
 const dataProvider = simpleRestProvider('http://localhost:5000/api', httpClient);
 
 // 2. Auth Provider Setup
-// Replace your old authProvider block in App.jsx with this one:
-
 const authProvider = {
     login: ({ username, password }) => {
         return fetch('http://localhost:5000/api/login', {
@@ -34,12 +204,9 @@ const authProvider = {
             return res.json();
         })
         .then(data => {
-            // CRITICAL FIX: Explicitly block anyone who isn't an admin
             if (data.user.role !== 'admin') {
                 throw new Error('Access denied. This dashboard is for administrators only.');
             }
-            
-            // If they are an admin, save their session data
             localStorage.setItem('adminToken', data.token);
             localStorage.setItem('adminRole', data.user.role);
         });
@@ -56,14 +223,10 @@ const authProvider = {
         }
         return Promise.resolve();
     },
-    // DOUBLE GUARD: Make sure checkAuth fails if an admin token isn't present
     checkAuth: () => {
         const token = localStorage.getItem('adminToken');
         const role = localStorage.getItem('adminRole');
-        
-        if (token && role === 'admin') {
-            return Promise.resolve();
-        }
+        if (token && role === 'admin') return Promise.resolve();
         return Promise.reject();
     },
     getPermissions: () => {
@@ -72,9 +235,7 @@ const authProvider = {
     },
 };
 
-// 3. Custom Login Page (Upgraded to use React-Admin's Native Hook)
-// Replacement for CustomLoginPage inside App.jsx
-// Updated CustomLoginPage inside App.jsx using Username instead of Email
+// 3. Custom Login Page
 const CustomLoginPage = () => {
     const login = useLogin();
     const notify = useNotify();
@@ -82,7 +243,6 @@ const CustomLoginPage = () => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    // Focus and hover interaction states
     const [usernameFocused, setUsernameFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [btnHovered, setBtnHovered] = useState(false);
@@ -90,8 +250,6 @@ const CustomLoginPage = () => {
     const handleLogin = (e) => {
         e.preventDefault();
         setLoading(true);
-        
-        // Pass username and password directly into the React-Admin auth system
         login({ username, password })
             .catch(error => {
                 setLoading(false);
@@ -101,74 +259,36 @@ const CustomLoginPage = () => {
 
     return (
         <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-            padding: '20px',
-            boxSizing: 'border-box'
+            display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh',
+            background: 'linear-gradient(135deg, #090d1a 0%, #0f1526 100%)',
+            fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', padding: '20px', boxSizing: 'border-box'
         }}>
             <div style={{
-                background: 'rgba(255, 255, 255, 0.98)',
-                borderRadius: '16px',
-                width: '100%',
-                maxWidth: '400px',
-                padding: '40px',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)',
-                boxSizing: 'border-box',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: '#0f1526', borderRadius: '16px', width: '100%', maxWidth: '400px', padding: '40px',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)', boxSizing: 'border-box', border: '1px solid #1e2640'
             }}>
-                {/* Brand Header */}
                 <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <h1 style={{ 
-                        fontSize: '32px', 
-                        fontWeight: '800', 
-                        color: '#f59e0b', 
-                        margin: '0 0 8px 0',
-                        letterSpacing: '-0.5px'
-                    }}>
+                    <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#f59e0b', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
                         udrive
                     </h1>
-                    <p style={{ 
-                        fontSize: '14px', 
-                        color: '#64748b', 
-                        margin: 0,
-                        fontWeight: '500'
-                    }}>
+                    <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0, fontWeight: '500' }}>
                         Administrative Control Panel
                     </p>
                 </div>
 
                 <form onSubmit={handleLogin}>
-                    {/* NEW: Username Input Group */}
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ 
-                            display: 'block', 
-                            fontSize: '13px', 
-                            fontWeight: '600', 
-                            color: '#334155', 
-                            marginBottom: '6px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                        }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase' }}>
                             Username
                         </label>
                         <input 
                             type="text" 
-                            placeholder="Enter your admin username" 
+                            placeholder="Enter admin username" 
                             style={{ 
-                                width: '100%', 
-                                padding: '12px 16px', 
-                                fontSize: '15px',
-                                border: usernameFocused ? '2px solid #f59e0b' : '1px solid #cbd5e1', 
-                                borderRadius: '8px', 
-                                backgroundColor: '#f8fafc',
-                                color: '#1e293b',
-                                outline: 'none',
-                                boxSizing: 'border-box',
-                                transition: 'all 0.2s ease-in-out'
+                                width: '100%', padding: '12px 16px', fontSize: '15px',
+                                border: usernameFocused ? '2px solid #f59e0b' : '1px solid #1e2640', 
+                                borderRadius: '8px', backgroundColor: '#090d1a', color: '#f1f5f9',
+                                outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s'
                             }} 
                             onFocus={() => setUsernameFocused(true)}
                             onBlur={() => setUsernameFocused(false)}
@@ -177,33 +297,18 @@ const CustomLoginPage = () => {
                         />
                     </div>
 
-                    {/* Password Input Group */}
                     <div style={{ marginBottom: '28px' }}>
-                        <label style={{ 
-                            display: 'block', 
-                            fontSize: '13px', 
-                            fontWeight: '600', 
-                            color: '#334155', 
-                            marginBottom: '6px',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                        }}>
+                        <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#94a3b8', marginBottom: '6px', textTransform: 'uppercase' }}>
                             Password
                         </label>
                         <input 
                             type="password" 
                             placeholder="••••••••" 
                             style={{ 
-                                width: '100%', 
-                                padding: '12px 16px', 
-                                fontSize: '15px',
-                                border: passwordFocused ? '2px solid #f59e0b' : '1px solid #cbd5e1', 
-                                borderRadius: '8px', 
-                                backgroundColor: '#f8fafc',
-                                color: '#1e293b',
-                                outline: 'none',
-                                boxSizing: 'border-box',
-                                transition: 'all 0.2s ease-in-out'
+                                width: '100%', padding: '12px 16px', fontSize: '15px',
+                                border: passwordFocused ? '2px solid #f59e0b' : '1px solid #1e2640', 
+                                borderRadius: '8px', backgroundColor: '#090d1a', color: '#f1f5f9',
+                                outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s'
                             }} 
                             onFocus={() => setPasswordFocused(true)}
                             onBlur={() => setPasswordFocused(false)}
@@ -212,59 +317,27 @@ const CustomLoginPage = () => {
                         />
                     </div>
 
-                    {/* Action Button */}
                     <button 
                         type="submit" 
                         disabled={loading} 
                         onMouseEnter={() => setBtnHovered(true)}
                         onMouseLeave={() => setBtnHovered(false)}
                         style={{ 
-                            width: '100%', 
-                            padding: '14px', 
-                            backgroundColor: loading ? '#94a3b8' : (btnHovered ? '#d97706' : '#f59e0b'), 
-                            color: '#ffffff', 
-                            border: 'none', 
-                            borderRadius: '8px', 
-                            fontSize: '16px', 
-                            fontWeight: '600',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            boxShadow: btnHovered ? '0 4px 12px rgba(245, 158, 11, 0.3)' : 'none',
-                            transition: 'all 0.2s ease-in-out'
+                            width: '100%', padding: '14px', 
+                            backgroundColor: loading ? '#1e2640' : (btnHovered ? '#d97706' : '#f59e0b'), 
+                            color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600',
+                            cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
                         }}
                     >
-                        {loading ? (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                <span className="admin-spinner" /> Authenticating...
-                            </span>
-                        ) : 'Secure Sign In'}
+                        {loading ? 'Authenticating...' : 'Secure Sign In'}
                     </button>
                 </form>
-
-                {/* Footer Security Note */}
-                <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                    <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0 }}>
-                        Authorized personnel entry only. Actions are logged.
-                    </p>
-                </div>
             </div>
-
-            <style>{`
-                .admin-spinner {
-                    width: 16px;
-                    height: 16px;
-                    border: 2px solid rgba(255,255,255,0.3);
-                    border-radius: 50%;
-                    border-top-color: #fff;
-                    animation: spin 0.8s linear infinite;
-                }
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     );
 };
-// 4. Main App Component (Returning a valid array format with tracking keys)
+
+// 4. Main App Component
 function App() {
     return (
         <Admin 
@@ -272,9 +345,9 @@ function App() {
             authProvider={authProvider} 
             loginPage={CustomLoginPage} 
             dashboard={Dashboard}
+            theme={modernDarkTheme} // 💡 INJECTS THE PREMIUM CUSTOM DARK GRAPHICS ENGINE HERE
         >
             {permissions => [
-                // If the user's role is admin, include this resource in the layout array
                 permissions === 'admin' ? (
                     <Resource 
                         name="users" 
@@ -288,7 +361,13 @@ function App() {
                 <Resource key="courses" name="courses" list={CourseList} edit={CourseEdit} create={CourseCreate} />,
                 <Resource key="bookings" name="bookings" list={BookingList} options={{ label: 'Student Applications' }} />,
                 <Resource key="blogs" name="blogs" list={BlogList} edit={BlogEdit} create={BlogCreate} options={{ label: 'Blog Posts' }} />,
-                <Resource key="contacts" name="contacts" list={ListGuesser} options={{ label: 'Enquiries' }} />
+                <Resource key="contacts" name="contacts" list={ListGuesser} options={{ label: 'Enquiries' }} />,
+                <Resource 
+                    name="page-settings/standard-course" 
+                    list={CourseSettingsEdit} 
+                    icon={SettingsAccessibilityIcon}
+                    options={{ label: 'Standard Page Setup' }}
+                />
             ].filter(Boolean)} 
         </Admin>
     );

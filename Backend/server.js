@@ -444,5 +444,42 @@ app.get('/api/contacts', async (req, res) => {
     res.json(contacts.map(c => ({ id: c._id.toString(), ...c.toObject() })));
 });
 
+// 1. GET ROUTE: Fetches the data (or creates the fallback defaults if it doesn't exist yet)
+app.get('/api/page-settings/standard-course/:id', async (req, res) => {
+    try {
+        let settings = await PageSetting.findById(req.params.id);
+        if (!settings) {
+            // Self-healing database mechanism: creates defaults if collection is empty
+            settings = new PageSetting({
+                _id: req.params.id,
+                tuitionCost: 64,
+                theoryHours: 4,
+                behindWheelHours: 18,
+                courseLengthDays: 30,
+                instructorName: "Isaac Herman"
+            });
+            await settings.save();
+        }
+        res.json({ id: settings._id.toString(), ...settings.toObject() });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 2. PUT ROUTE: Updates the database when you save from your Admin Panel
+app.put('/api/page-settings/standard-course/:id', async (req, res) => {
+    try {
+        const updatedSettings = await PageSetting.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { returnDocument: 'after' } // Clears deprecation warnings
+        );
+        res.json({ id: updatedSettings._id.toString(), ...updatedSettings.toObject() });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Backend API running on port ${PORT}`));
