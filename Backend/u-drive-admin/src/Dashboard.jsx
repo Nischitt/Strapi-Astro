@@ -1,254 +1,66 @@
 import React from "react";
-import { useGetList } from "react-admin"; // 💡 Import the data hook from react-admin
+import { useGetList } from "react-admin";
+import { 
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid 
+} from "recharts";
+import { Box, Typography, Paper, Grid } from "@mui/material";
+import { List, ListItem, ListItemText, ListItemIcon, Divider } from "@mui/material";
+
 
 export function Dashboard() {
-  // 1. Fetch live data from your react-admin resources
-  const { total: bookingsCount, isLoading: loadingBookings } = useGetList("bookings", {
-    pagination: { page: 1, perPage: 1 },
-  });
-
-  const { total: coursesCount, isLoading: loadingCourses } = useGetList("courses", {
-    pagination: { page: 1, perPage: 1 },
-  });
-
-  const { total: leadsCount, isLoading: loadingLeads } = useGetList("contacts", {
-    pagination: { page: 1, perPage: 1 },
-  });
+  // 1. Fetching live data from your resources
+  const { data: bookings, isLoading: loadingBookings } = useGetList("bookings");
+  const { total: leadsCount } = useGetList("contacts");
+  const { total: coursesCount } = useGetList("courses");
 
   const cardStyle = {
-    background: "rgba(22,25,37,0.8)",
-    backdropFilter: "blur(12px)",
+    background: "#161925",
     border: "1px solid rgba(255,255,255,0.06)",
     borderRadius: "20px",
     padding: "24px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
   };
 
-  // 2. Set up stat configurations with live fallback values
+  // Logic for dynamic stats
   const statsData = [
-    {
-      title: "Total Bookings",
-      value: loadingBookings ? "..." : String(bookingsCount ?? 0),
-      growth: "+24%",
-      color: "#10b981",
-      icon: "📈",
-    },
-    {
-      title: "Active Courses",
-      value: loadingCourses ? "..." : String(coursesCount ?? 0),
-      growth: "+14%",
-      color: "#38bdf8",
-      icon: "🎓",
-    },
-    {
-      title: "Pending Leads",
-      value: loadingLeads ? "..." : String(leadsCount ?? 0),
-      growth: "-35%",
-      color: "#ef4444",
-      icon: "⏳",
-    },
-    {
-      title: "Revenue",
-      value: loadingBookings ? "..." : `Rs ${(bookingsCount ?? 0) * 5000}`, // Multiplied by your course package rate
-      growth: "+18%",
-      color: "#f59e0b",
-      icon: "💰",
-    },
+    { title: "Total Bookings", value: bookings?.length || 0, color: "#10b981", icon: "📈" },
+    { title: "Active Courses", value: coursesCount || 0, color: "#38bdf8", icon: "🎓" },
+    
+   
   ];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "24px",
-        background:
-          "radial-gradient(circle at top left, rgba(245,158,11,.12), transparent 35%), radial-gradient(circle at bottom right, rgba(56,189,248,.12), transparent 35%), #0f111a",
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "32px",
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              color: "#fff",
-              fontSize: "32px",
-              fontWeight: 800,
-              margin: 0,
-            }}
-          >
-            🚗 Dashboard Overview
-          </h1>
-          <p
-            style={{
-              color: "#94a3b8",
-              marginTop: "8px",
-              fontSize: "14px",
-            }}
-          >
-            Monitor bookings, courses, leads and operational performance.
-          </p>
-        </div>
+    <Box sx={{ p: 3, background: "#0f111a", minHeight: "100vh", color: "#fff" }}>
+      
+      {/* HEADER SECTION */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 4 }}>
+        <Box>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>🚗 Management Cockpit</Typography>
+            <Typography sx={{ color: "#94a3b8" }}>Real-time overview of your driving school operations.</Typography>
+        </Box>
+      </Box>
 
-        <button
-          style={{
-            background: "linear-gradient(135deg,#f59e0b,#fbbf24)",
-            border: "none",
-            color: "#111827",
-            padding: "12px 20px",
-            borderRadius: "12px",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
-        >
-          + New Booking
-        </button>
-      </div>
+      {/* URGENT ALERT BANNER */}
+      {leadsCount > 0 && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "#ef444420", border: "1px solid #ef4444", borderRadius: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <Typography sx={{ color: "#fca5a5" }}>⚠️ {leadsCount} new leads require immediate follow-up.</Typography>
+        </Paper>
+      )}
 
-      {/* Stats Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))",
-          gap: "20px",
-          marginBottom: "30px",
-        }}
-      >
+      {/* STATS GRID */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
         {statsData.map((item) => (
-          <div key={item.title} style={cardStyle}>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginBottom: "14px",
-              }}
-            >
-              <span style={{ color: "#94a3b8", fontSize: "13px" }}>
-                {item.title}
-              </span>
-              <span style={{ fontSize: "20px" }}>{item.icon}</span>
-            </div>
-
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: "36px",
-                margin: "0 0 10px",
-                fontWeight: 800,
-              }}
-            >
-              {item.value}
-            </h2>
-
-            <span
-              style={{
-                color: item.color,
-                background: `${item.color}20`,
-                padding: "4px 10px",
-                borderRadius: "999px",
-                fontSize: "12px",
-                fontWeight: 700,
-              }}
-            >
-              {item.growth}
-            </span>
-          </div>
+          <Grid item xs={12} sm={6} md={3} key={item.title}>
+            <Box sx={cardStyle}>
+              <Typography sx={{ color: "#94a3b8", fontSize: "13px" }}>{item.title}</Typography>
+              <Typography sx={{ fontSize: "32px", fontWeight: 800, my: 1 }}>{item.value}</Typography>
+            </Box>
+          </Grid>
         ))}
-      </div>
+      </Grid>
 
-      {/* Main Grid Layout */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "2fr 1fr",
-          gap: "20px",
-        }}
-      >
-        {/* Chart Area */}
-        <div style={cardStyle}>
-          <h3
-            style={{
-              color: "#fff",
-              marginBottom: "20px",
-              fontSize: "18px",
-            }}
-          >
-            📊 Booking Performance
-          </h3>
-
-          <div
-            style={{
-              height: "320px",
-              borderRadius: "16px",
-              background:
-                "linear-gradient(180deg, rgba(245,158,11,.15), rgba(245,158,11,.02))",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#64748b",
-              border: "1px dashed rgba(255,255,255,.08)",
-            }}
-          >
-            Chart Area
-          </div>
-        </div>
-
-        {/* Activity Feed */}
-        <div style={cardStyle}>
-          <h3
-            style={{
-              color: "#fff",
-              marginBottom: "20px",
-              fontSize: "18px",
-                }}
-          >
-            🔔 Recent Activity
-          </h3>
-
-          {[
-            "New booking received",
-            "Premium package purchased",
-            "Course updated",
-            "Lead submitted",
-          ].map((activity, index) => (
-            <div
-              key={index}
-              style={{
-                padding: "14px",
-                borderRadius: "12px",
-                background: "#0f111a",
-                marginBottom: "12px",
-              }}
-            >
-              <div
-                style={{
-                  color: "#fff",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                }}
-              >
-                {activity}
-              </div>
-
-              <div
-                style={{
-                  color: "#64748b",
-                  fontSize: "11px",
-                  marginTop: "4px",
-                }}
-              >
-                {index + 1} hour ago
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    
+      
+    </Box>
   );
 }

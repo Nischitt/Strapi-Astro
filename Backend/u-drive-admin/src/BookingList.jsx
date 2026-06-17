@@ -20,7 +20,7 @@ export const BookingList = (props) => (
             <NumberField 
                 source="itemPrice" 
                 label="Price" 
-                options={{ style: 'currency', currency: 'USD' }} 
+                options={{ style: 'currency', currency: 'Nrs' }} 
             />
             <DateField source="bookingDate" label="Applied On" showTime />
             <TextField source="status" label="Status" />

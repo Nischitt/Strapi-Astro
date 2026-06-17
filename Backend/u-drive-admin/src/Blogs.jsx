@@ -13,6 +13,7 @@ import {
     NumberInput 
 } from 'react-admin';
 
+
 // 1. LIST VIEW: Shows all blog posts in a table
 export const BlogList = (props) => (
     <List {...props}>
@@ -20,8 +21,7 @@ export const BlogList = (props) => (
             <TextField source="title" />
             <TextField source="author" />
             <TextField source="category" />
-            <DateField source="date" label="Published Date" />
-            <EditButton />
+<DateField source="createdAt" label="Published Date" />            <EditButton />
         </Datagrid>
     </List>
 );
@@ -47,22 +47,16 @@ export const BlogCreate = (props) => (
     </Create>
 );
 
-// 3. EDIT VIEW: Form to modify existing posts
 export const BlogEdit = (props) => (
-    <SimpleForm>
-        <TextInput disabled source="id" />
-        <TextInput source="title" fullWidth />
-        <TextInput source="author" />
-        <TextInput source="category" />
-        
-        {/* 💡 THE MISSING LINK: Adding the image input field */}
-        <TextInput 
-            source="image" 
-            label="Image Path / URL (e.g., src/images/5.jpg)" 
-            fullWidth 
-        />
-        
-        <DateInput source="publishedDate" />
-        <TextInput source="content" multiline rows={5} fullWidth />
-    </SimpleForm>
+    <Edit {...props}>
+        <SimpleForm>
+            <TextInput disabled source="id" />
+            <TextInput source="title" fullWidth />
+            <TextInput source="author" />
+            <TextInput source="category" />
+            <TextInput source="image" fullWidth />
+            <DateInput source="createdAt" />
+            <TextInput source="content" multiline rows={5} fullWidth />
+        </SimpleForm>
+    </Edit>
 );

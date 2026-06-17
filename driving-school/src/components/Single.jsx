@@ -5,12 +5,25 @@ export default function Single() {
   const [enrollStatus, setEnrollStatus] = useState("");
 
   // 1. Fetch the price set by the admin panel from localStorage
-  useEffect(() => {
-    const savedPrice = localStorage.getItem("adminStandalonePrice");
-    if (savedPrice) {
-      setCoursePrice(Number(savedPrice));
+// Replace your existing useEffect with this
+useEffect(() => {
+  const fetchPrice = async () => {
+  try {
+    const response = await fetch("http://localhost:5000/api/page-settings/standard-course/YOUR_ID_HERE");
+    const data = await response.json();
+    
+    // Check your MongoDB document: is it 'tuitionCost' or 'price'?
+    // Use the exact field name found in your database
+    if (data.tuitionCost) { 
+      setCoursePrice(Number(data.tuitionCost));
     }
-  }, []);
+    } catch (error) {
+      console.error("Failed to fetch price from server:", error);
+    }
+  };
+
+  fetchPrice();
+}, []);
 
   // 2. The core Enrollment click handler
   const handleEnrollNow = async () => {
@@ -96,7 +109,7 @@ export default function Single() {
                 className="w-full object-cover aspect-video transform scale-100 group-hover:scale-[1.02] transition-transform duration-700" 
               />
               <span className="absolute top-4 left-4 z-20 bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[10px] px-4 py-1.5 rounded-md uppercase tracking-wider shadow-lg">
-                Premium Driving Course
+                Standard Driving Course 
               </span>
             </div>
 

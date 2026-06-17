@@ -37,24 +37,20 @@ export default function Navbar() {
           </a>
 
           {/* Desktop Navigation Link Nodes */}
-          <div className="hidden lg:flex items-center gap-1 font-bold text-[11px] tracking-widest text-slate-500 uppercase">
+          <div className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
             
             {/* HOME DROPDOWN */}
-            <div className="relative group px-3 py-2">
-              <button className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer">
-                Home <span className="text-[8px] opacity-60 group-hover:rotate-180 transition-transform duration-200">▼</span>
-              </button>
-              <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto bg-white border border-slate-200/60 shadow-xl rounded-xl p-2 w-48 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                <a href="/hero" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
-                  Main Homepage Layout
-                </a>
-              </div>
+            <div className="relative group px-4 py-3">
+              <a href="/hero"><button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
+                Home 
+              </button></a>
+              
             </div>
 
             {/* ABOUT DROPDOWN */}
             <div className="relative group px-3 py-2">
-              <button className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer">
-                About <span className="text-[8px] opacity-60 group-hover:rotate-180 transition-transform duration-200">▼</span>
+              <button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
+                About 
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto bg-white border border-slate-200/60 shadow-xl rounded-xl p-2 w-52 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                 <a href="/about" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
@@ -71,36 +67,39 @@ export default function Navbar() {
 
             {/* COURSES DROPDOWN */}
             <div className="relative group px-3 py-2">
-              <button className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer">
-                Courses <span className="text-[8px] opacity-60 group-hover:rotate-180 transition-transform duration-200">▼</span>
+              <button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
+                Courses 
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto bg-white border border-slate-200/60 shadow-xl rounded-xl p-2 w-52 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                <a href="/Modern" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
+<a href="/modern" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
                   Modern Matrix Course
                 </a>
-                <a href="/single" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
+              {/* Add this inside your BLOG DROPDOWN or as a new link */}
+
+
+               {/* <a href="/single" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
                   Single Session Module
-                </a>
+                </a> */}
               </div>
             </div>
 
             {/* BLOG DROPDOWN */}
             <div className="relative group px-3 py-2">
-              <button className="flex items-center gap-1 hover:text-slate-900 transition py-2 cursor-pointer">
-                Blog <span className="text-[8px] opacity-60 group-hover:rotate-180 transition-transform duration-200">▼</span>
+              <button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
+                Blog 
               </button>
               <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto bg-white border border-slate-200/60 shadow-xl rounded-xl p-2 w-52 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                <a href="/Blog" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
+<a href="/blog" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
                   View Shared Posts
                 </a>
-                <a href="/Tips" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
+<a href="/tips" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
                   Defensive Driving Tips
                 </a>
               </div>
             </div>
 
             {/* CONTACT NODE */}
-            <a href="/contact" className="px-4 py-4 hover:text-slate-900 transition">
+            <a href="/contact" className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
               Contact
             </a>
 
@@ -111,7 +110,7 @@ export default function Navbar() {
             {isLoggedIn ? (
               <div className="flex items-center gap-2.5">
                 <button 
-                  onClick={() => window.location.href = '/userprofile'}
+onClick={() => (window.location.href = '/userprofile')}
                   className="bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl hover:bg-slate-200 font-bold text-[10px] tracking-wider uppercase transition active:scale-95 cursor-pointer"
                 >
                   Profile
@@ -167,8 +166,9 @@ export default function Navbar() {
               <span className="text-slate-900 block border-b border-slate-100 pb-1">Navigation</span>
               <a href="/hero" className="text-slate-600 hover:text-amber-500 transition py-1">Home Base</a>
               <a href="/about" className="text-slate-600 hover:text-amber-500 transition py-1">About Profile</a>
-              <a href="/Modern" className="text-slate-600 hover:text-amber-500 transition py-1">Our Courses</a>
-              <a href="/Tips" className="text-slate-600 hover:text-amber-500 transition py-1">Driving Tips</a>
+              <a href="/modern" className="text-slate-600 hover:text-amber-500 transition py-1">Our Courses</a>
+              <a href="/tips" className="text-slate-600 hover:text-amber-500 transition py-1">Driving Tips</a>
+
               <a href="/contact" className="text-slate-600 hover:text-amber-500 transition py-1">Contact Gateway</a>
             </div>
           </div>

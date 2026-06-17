@@ -95,6 +95,8 @@ export default function UserProfile() {
       setMessage({ text: error.message, type: 'error' });
     }
   };
+  
+
 
   // Handle simulated payment interface pipeline
   const handleWalletPayment = async (bookingId, itemName, amount) => {

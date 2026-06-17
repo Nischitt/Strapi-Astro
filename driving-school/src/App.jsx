@@ -15,6 +15,7 @@ import Mission from "./components/Mission";
 import Single from "./components/Single";
 import LoginSignup from "./components/LoginSignup";
 import UserProfile from "./components/UserProfile";
+
 function App() {
 
   
@@ -39,6 +40,7 @@ function App() {
         <Route path="/single" element={<Single />} />
         <Route path="/loginsignup" element={<LoginSignup />} />
         <Route path="/userprofile" element={<UserProfile />} />
+        
 
 
         {/* Fallback route: Redirects broken URLs back to the homepage */}

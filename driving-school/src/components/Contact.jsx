@@ -156,15 +156,19 @@ export default function Contact() {
                     name="category" 
                     className="w-full bg-slate-950 border border-slate-800/80 focus:border-amber-400/80 p-3.5 rounded-xl text-xs text-slate-400 outline-none cursor-pointer transition duration-200"
                   >
-                    <option value="student">Student Driver Course</option>
-                    <option value="license">License Preparation</option>
+                    <option value="student">Beginner Driver Course</option>
+                    <option value="license">Advanced Driving Skills Program</option>
+                    <option value="course">Complete Driving Mastery Package</option>
                   </select>
                   
                   <select 
                     name="instructor" 
                     className="w-full bg-slate-950 border border-slate-800/80 focus:border-amber-400/80 p-3.5 rounded-xl text-xs text-slate-400 outline-none cursor-pointer transition duration-200"
                   >
-                    <option value="isaac">Isaac Herman</option>
+                    <option value="isaac">Marcus Vance</option>
+                    <option value="isaac">Elena Rostova</option>
+                    <option value="isaac">David Chen</option>
+                    <option value="isaac">Sarah Jenkins</option>
                   </select>
                 </div>
 

@@ -1,12 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 export default function Home() {
+  const [reviews, setReviews] = useState([]);
   const galleryImages = [
     "src/images/g1.jpg", "src/images/g2.jpg", "src/images/g3.jpg",
     "src/images/g4.jpg", "src/images/g5.jpg", "src/images/g6.jpg",
     "src/images/g7.jpg", "src/images/g8.jpg", "src/images/g9.jpg"
   ];
+
+
 
   return (
     <div className="w-full min-h-screen font-sans bg-white text-slate-700 antialiased overflow-x-hidden selection:bg-yellow-500 selection:text-black">
@@ -191,38 +194,10 @@ export default function Home() {
     </div>
   </div>
 </section>
-<section className="py-28 bg-white">
-  <div className="max-w-7xl mx-auto px-6">
+{/* DYNAMIC STUDENT SUCCESS STORIES SECTION */}
 
-    <div className="text-center mb-20">
-      <h2 className="text-5xl font-extrabold">
-        Student Success Stories
-      </h2>
-    </div>
 
-    <div className="grid md:grid-cols-3 gap-8">
 
-      {[
-        "Passed on first attempt",
-        "Excellent instructors",
-        "Highly recommended"
-      ].map((text,index)=>(
-        <div
-          key={index}
-          className="p-8 rounded-3xl shadow-xl bg-gradient-to-br from-yellow-50 to-white border"
-        >
-          <div className="text-yellow-500 text-4xl mb-4">
-            ★★★★★
-          </div>
-
-          <p className="text-slate-600">
-            {text}
-          </p>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
 <section className="py-32 bg-yellow-500 relative overflow-hidden">
   <div className="absolute inset-0">
     <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/20 rounded-full"></div>
