@@ -102,6 +102,9 @@ export default function Navbar() {
             <a href="/contact" className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
               Contact
             </a>
+            <a href="/CustomerReviews" className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
+              Reviews
+            </a>
 
           </div>
 

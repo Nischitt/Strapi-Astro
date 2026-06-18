@@ -4,6 +4,7 @@ import simpleRestProvider from 'ra-data-simple-rest';
 import { createTheme } from '@mui/material/styles';
 import SchoolIcon from "@mui/icons-material/School";
 import SettingsIcon from '@mui/icons-material/Settings'; // Add this line
+import RateReviewIcon from '@mui/icons-material/RateReview';
 
 // Icons
 import PeopleIcon from '@mui/icons-material/People';
@@ -14,6 +15,8 @@ import SettingsAccessibilityIcon from '@mui/icons-material/SettingsAccessibility
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import GroupIcon from '@mui/icons-material/Group';
 import { SiteSettingsEdit } from './SiteSettingsEdit';
+// App.jsx
+import { ReviewList, ReviewEdit } from './reviews';
 
 
 import { PackageList, PackageEdit, PackageCreate } from './packages';
@@ -184,6 +187,7 @@ function App() {
                 <Resource name="contacts" list={ListGuesser} icon={MailOutlineIcon} options={{ label: 'Enquiries' }} />,
                 <Resource name="blogs" list={BlogList} edit={BlogEdit} create={BlogCreate} icon={MenuBookIcon} />,
                 <Resource name="team" list={TeamList} edit={TeamEdit} create={TeamCreate} icon={PeopleIcon} options={{ label: 'Our Team' }} />,
+                <Resource name="reviews" list={ReviewList} edit={ReviewEdit} icon={RateReviewIcon} options={{ label: 'Customer Reviews' }} />,
                 // Add this inside the <Admin> component array:
 <Resource name="site-settings" edit={SiteSettingsEdit} icon={SettingsIcon} options={{ label: 'Site Content' }} />
                     

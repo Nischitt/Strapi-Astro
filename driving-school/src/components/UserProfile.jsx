@@ -96,8 +96,6 @@ export default function UserProfile() {
     }
   };
   
-
-
   // Handle simulated payment interface pipeline
   const handleWalletPayment = async (bookingId, itemName, amount) => {
     const useEsewa = window.confirm(
@@ -150,6 +148,13 @@ export default function UserProfile() {
     }, 2000); 
   };
 
+  /* 👇 NEW: STREAMING REDIRECT TRIGGER FOR CERTIFICATE DOWNLOAD */
+  const handleDownloadCertificate = (bookingId) => {
+    if (!bookingId) return;
+    // Hits the programmatic node stream directly triggering attachment layout download
+    window.location.href = `http://localhost:5000/api/bookings/${bookingId}/certificate`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
@@ -163,9 +168,7 @@ export default function UserProfile() {
     <div className="min-h-screen bg-slate-50/50 pt-28 pb-20 px-4 md:px-8 font-sans antialiased text-slate-600">
       <div className="max-w-7xl mx-auto space-y-10">
         
-        {/* =========================================================================
-            1. DASHBOARD HEADER PROFILE CARD
-            ========================================================================= */}
+        {/* Profile Header */}
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
           
@@ -192,7 +195,7 @@ export default function UserProfile() {
           </button>
         </div>
 
-        {/* Dynamic Context Status Notification Banner */}
+        {/* Banners */}
         {message.text && (
           <div className={`p-4 rounded-xl font-semibold text-xs border transition-all duration-300 flex items-center gap-2.5 ${
             message.type === 'success' 
@@ -203,9 +206,7 @@ export default function UserProfile() {
           </div>
         )}
 
-        {/* =========================================================================
-            2. ACTIVE ENROLMENTS LEDGER TABLE
-            ========================================================================= */}
+        {/* Ledger Table */}
         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
           <div className="p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
@@ -271,12 +272,25 @@ export default function UserProfile() {
                       </td>
                       <td className="p-4 text-right pr-6">
                         {(booking.paymentStatus === 'Paid' || booking.payment === 'Paid via Wallet') ? (
-                          <div className="inline-flex flex-col items-end">
-                            <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
-                              Released via {booking.paymentMethod || 'Wallet'}
-                            </span>
-                            {booking.transactionId && (
-                              <span className="text-[9px] text-slate-400 font-mono mt-1 tracking-tight">{booking.transactionId}</span>
+                          <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
+                            {/* Status Info badges */}
+                            <div className="inline-flex flex-col items-end">
+                              <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider shadow-sm">
+                                Released via {booking.paymentMethod || 'Wallet'}
+                              </span>
+                              {booking.transactionId && (
+                                <span className="text-[9px] text-slate-400 font-mono mt-1 tracking-tight">{booking.transactionId}</span>
+                              )}
+                            </div>
+                            
+                            {/* 👇 CERTIFICATE INLINE ACTION BUTTON */}
+                            {(booking.status === 'Approved' || booking.status === 'Success!') && (
+                              <button
+                                onClick={() => handleDownloadCertificate(booking._id || booking.id)}
+                                className="bg-amber-400 hover:bg-amber-500 text-slate-950 text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-sm border border-amber-300 transition active:scale-95 cursor-pointer ml-2"
+                              >
+                                🎓 Certificate
+                              </button>
                             )}
                           </div>
                         ) : (
@@ -296,16 +310,14 @@ export default function UserProfile() {
           )}
         </div>
 
-        {/* =========================================================================
-            3. INTERACTIVE CURRICULUM CATALOGS
-            ========================================================================= */}
+        {/* Catalogs */}
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-black text-slate-900 tracking-tight">Available Curriculums & Tracks</h3>
             <p className="text-xs text-slate-400 mt-0.5">Instantly acquire additional instructional hours or defensive certification components.</p>
           </div>
 
-          {/* Sub-Catalog A: Driving Training Packages */}
+          {/* Sub-Catalog A */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <span className="h-px bg-slate-200 flex-1" />
@@ -349,7 +361,7 @@ export default function UserProfile() {
             </div>
           </div>
 
-          {/* Sub-Catalog B: Academic License Courses */}
+          {/* Sub-Catalog B */}
           <div className="space-y-4 pt-4">
             <div className="flex items-center gap-2">
               <span className="h-px bg-slate-200 flex-1" />

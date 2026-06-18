@@ -15,6 +15,7 @@ import Mission from "./components/Mission";
 import Single from "./components/Single";
 import LoginSignup from "./components/LoginSignup";
 import UserProfile from "./components/UserProfile";
+import CustomerReviews from "./components/CustomerReviews";
 
 function App() {
 
@@ -40,6 +41,7 @@ function App() {
         <Route path="/single" element={<Single />} />
         <Route path="/loginsignup" element={<LoginSignup />} />
         <Route path="/userprofile" element={<UserProfile />} />
+        <Route path="/customerreviews" element={<CustomerReviews />} />
         
 
 
