@@ -16,6 +16,7 @@ import Single from "./components/Single";
 import LoginSignup from "./components/LoginSignup";
 import UserProfile from "./components/UserProfile";
 import CustomerReviews from "./components/CustomerReviews";
+import StudentPortal from "./components/StudentPortal";
 
 function App() {
 
@@ -42,6 +43,7 @@ function App() {
         <Route path="/loginsignup" element={<LoginSignup />} />
         <Route path="/userprofile" element={<UserProfile />} />
         <Route path="/customerreviews" element={<CustomerReviews />} />
+        <Route path="/student-portal" element={<StudentPortal />} />
         
 
 

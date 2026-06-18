@@ -127,6 +127,8 @@ const SlotSchema = new mongoose.Schema({
     bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }
 }, { timestamps: true });
 
+
+
 // ======================
 // Page Setting
 // ======================
@@ -173,6 +175,7 @@ const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema);
 const Settings = mongoose.models.Settings || mongoose.model('Settings', SettingsSchema);
 const SiteSettings = mongoose.models.SiteSettings || mongoose.model('SiteSettings', SiteSettingsSchema);
 
+
 // ======================
 // Export
 // ======================
@@ -188,5 +191,5 @@ module.exports = {
     PageSetting,
     Review,
     Settings,
-    SiteSettings
+    SiteSettings,
 };

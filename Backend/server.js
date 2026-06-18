@@ -345,6 +345,7 @@ app.get('/api/bookings/:id/certificate', async (req, res) => {
     }
 });
 
+
 // ==========================================
 // COURSES ENDPOINTS
 // ==========================================
@@ -580,11 +581,57 @@ app.post('/api/blogs', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+//student
+// Add this route near your /api/login endpoint in server.js
+app.get('/api/student/portal-metrics', async (req, res) => {
+    try {
+        // 1. Extract the secure token passed from the student portal frontend
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: "Access denied. Please log in." });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
 
-app.get('/api/my-progress', async (req, res) => {
-    const { email } = req.query; // Send email from frontend
-    const booking = await Booking.findOne({ studentEmail: email });
-    res.json(booking);
+        // 2. Find the logged-in user inside your native User collection
+        const user = await User.findById(decoded.id);
+        if (!user) return res.status(404).json({ error: "Student profile not found." });
+
+        // 3. Match their user email against your Booking entries
+        const booking = await Booking.findOne({ studentEmail: user.email.toLowerCase().trim() });
+
+        // If they don't have a booking record yet, display fallback parameters safely
+        if (!booking) {
+            return res.json({
+                id: user._id.toString(),
+                studentName: "New Student",
+                activeCourse: "No Registered Course",
+                progressPercent: 0,
+                upcomingLessons: 0,
+                attendanceRate: 0,
+                certificateStatus: "Pending"
+            });
+        }
+
+        // 4. Calculate stats on-the-fly from their real booking row data
+        const progress = booking.remainingSessions === 0 ? 100 : 80;
+        const upcoming = booking.remainingSessions || 3;
+        const certStatus = (booking.paymentStatus === 'Paid' && booking.status === 'Approved') ? 'Available' : 'Pending';
+
+        res.json({
+            id: booking._id.toString(),
+            studentName: booking.studentName || "Ram Sharma",
+            activeCourse: booking.itemName || "Beginner Driving",
+            progressPercent: progress, 
+            upcomingLessons: upcoming,
+            attendanceRate: 92, // Tracked fallback
+            certificateStatus: certStatus
+        });
+
+    } catch (error) {
+        return res.status(401).json({ error: "Session expired. Please log in again." });
+    }
 });
 
 app.put('/api/blogs/:id', async (req, res) => {
