@@ -24,7 +24,10 @@ app.use(cors({
     exposedHeaders: ['Content-Range', 'X-Total-Count']
 }));
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect('mongodb://127.0.0.1:27017/udrive')
+    .then(() => console.log('Connected to MongoDB...'))
+    .catch(err => console.error('Could not connect to MongoDB...', err));
+
 // =================================================================
 // HELPERS (moved above usage — was previously referenced before
 // definition further down the file)
