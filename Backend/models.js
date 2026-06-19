@@ -47,7 +47,10 @@ const BookingSchema = new mongoose.Schema({
     paymentStatus: { type: String, default: 'Unpaid' },
     transactionId: { type: String, default: null },
 
-    remainingSessions: { type: Number, default: 0 }
+    attendedSessions: { type: Number, default: 0 },  // Increments when they check in
+totalSessions: { type: Number, default: 20 },     // Total lessons in the course bundle
+remainingSessions: { type: Number, default: 20 },
+
 }, { timestamps: true });
 
 // ======================

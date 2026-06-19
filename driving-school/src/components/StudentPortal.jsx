@@ -6,11 +6,8 @@ export default function StudentPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 1. Read the token saved in your application when the user logged in
-  const token = localStorage.getItem('token'); 
-
- useEffect(() => {
-    // 1. Check every common storage key your login system might be using
+  useEffect(() => {
+    // 1. Fetch active authentication keys across environments
     const activeToken = 
       localStorage.getItem('token') || 
       localStorage.getItem('studentToken') || 
@@ -19,21 +16,20 @@ export default function StudentPortal() {
     if (!activeToken) {
       console.warn("No active token detected in localStorage. Booting into Sandbox Mock Mode for testing.");
       
-      // Fallback: Instantly display your exact wireframe requirements so you can view your portal
       setStudentData({
         id: "mock-booking-id-123",
         studentName: "Ram Sharma",
-        activeCourse: "Beginner Driving",
-        progressPercent: 80,
-        upcomingLessons: 3,
-        attendanceRate: 92,
+        activeCourse: "Premium Service",
+        progressPercent: 0,
+        upcomingLessons: 24,
+        attendanceRate: 0,
         certificateStatus: "Pending"
       });
       setLoading(false);
       return;
     }
 
-    // 2. If a real token exists, pull live data from your server.js endpoint
+    // 2. Fetch live metrics from the updated package-aware backend endpoint
     fetch('http://localhost:5000/api/student/portal-metrics', {
       headers: {
         'Authorization': `Bearer ${activeToken}`
@@ -53,12 +49,40 @@ export default function StudentPortal() {
       });
   }, []);
 
+  // Attendance check-in process logic
+  const handleDailyCheckIn = async () => {
+    const activeToken = 
+      localStorage.getItem('token') || 
+      localStorage.getItem('studentToken') || 
+      localStorage.getItem('adminToken');
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/student/check-in', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${activeToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Check-in operation failed.");
+      }
+      
+      alert("✨ Attendance recorded successfully! Progress metrics updated.");
+      window.location.reload(); 
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const downloadCertificate = () => {
     if (!studentData || studentData.certificateStatus === 'Pending') {
       alert("Certificate Locked. Ensure processing criteria are cleared on your ledger.");
       return;
     }
-    // Accesses your backend PDF Kit stream cleanly using the verified dataset row ID
     window.location.href = `http://localhost:5000/api/bookings/${studentData.id}/certificate`;
   };
 
@@ -68,7 +92,7 @@ export default function StudentPortal() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-mono flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-2xl space-y-6 text-sm">
-        
+
         {/* Wireframe Layout Header */}
         <div className="text-center text-slate-700 select-none">
           ---------------------------------
@@ -78,7 +102,7 @@ export default function StudentPortal() {
           ---------------------------------
         </div>
 
-        {/* Layout Visual Data Display Grid */}
+        {/* Clean Live Information Stack (Rendered Once) */}
         <div className="space-y-4 px-1">
           <div className="flex flex-col">
             <span className="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Course</span>
@@ -110,7 +134,19 @@ export default function StudentPortal() {
 
         <div className="text-center text-slate-800 select-none">---------------------------------</div>
 
-        {/* Portal Action Buttons */}
+        {/* Central Attendance Check-In Action Area */}
+        <div className="px-1">
+          <button 
+            onClick={handleDailyCheckIn}
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-widest p-3 rounded-lg border border-emerald-700 transition duration-150 shadow-md cursor-pointer text-center"
+          >
+            ✔ Click to Check-In Today's Attendance
+          </button>
+        </div>
+
+        <div className="text-center text-slate-800 select-none">---------------------------------</div>
+
+        {/* Action Button Navigation Matrix Grid */}
         <div className="grid grid-cols-2 gap-2 text-xs">
           <button 
             onClick={() => setActiveTab('bookings')}

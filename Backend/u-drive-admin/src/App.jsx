@@ -190,6 +190,7 @@ function App() {
                 <Resource name="reviews" list={ReviewList} edit={ReviewEdit} icon={RateReviewIcon} options={{ label: 'Customer Reviews' }} />,
                 // Add this inside the <Admin> component array:
 <Resource name="site-settings" edit={SiteSettingsEdit} icon={SettingsIcon} options={{ label: 'Site Content' }} />
+
                     
 
                 
