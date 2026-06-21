@@ -16,7 +16,7 @@ import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import GroupIcon from '@mui/icons-material/Group';
 import { SiteSettingsEdit } from './SiteSettingsEdit';
 // App.jsx
-import { ReviewList, ReviewEdit } from './reviews';
+import { ReviewList, ReviewEdit } from './Reviews';
 import { API_URL } from './config';
 
 
