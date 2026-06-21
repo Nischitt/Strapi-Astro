@@ -23,11 +23,14 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Range', 'X-Total-Count'],
     exposedHeaders: ['Content-Range', 'X-Total-Count']
 }));
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+    throw new Error('MONGO_URI is not set. Add it to your .env file.');
+}
 
-mongoose.connect('mongodb://127.0.0.1:27017/udrive')
+mongoose.connect(MONGO_URI)
     .then(() => console.log('Connected to MongoDB...'))
     .catch(err => console.error('Could not connect to MongoDB...', err));
-
 // =================================================================
 // HELPERS (moved above usage — was previously referenced before
 // definition further down the file)
@@ -850,5 +853,5 @@ app.get('/api/users', authenticateAdmin, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend API running on port ${PORT}`));
