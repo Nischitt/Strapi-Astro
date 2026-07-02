@@ -230,10 +230,12 @@ app.post('/api/student/check-in', async (req, res) => {
         const user = await User.findById(decoded.id);
         if (!user) return res.status(404).json({ error: "User profile not found." });
 
-        const booking = await Booking.findOne({ studentEmail: user.email.toLowerCase().trim() });
-        if (!booking) return res.status(404).json({ error: "No active enrollment booking found to record attendance." });
+        const { bookingId } = req.body;
+        if (!bookingId) return res.status(400).json({ error: "No course selected for check-in." });
 
-        // Initialize fields if the document predates these schema additions.
+        const booking = await Booking.findOne({ _id: bookingId, studentEmail: user.email.toLowerCase().trim() });
+        if (!booking) return res.status(404).json({ error: "Booking not found for this account." });
+
         if (booking.totalSessions === undefined || booking.totalSessions === null) {
             booking.totalSessions = 20;
         }
@@ -246,12 +248,10 @@ app.post('/api/student/check-in', async (req, res) => {
 
         if (!booking.remainingSessions || booking.remainingSessions <= 0) {
             if (!booking.attendedSessions || booking.attendedSessions === 0) {
-                // Never actually started — give them their full session bundle.
                 booking.totalSessions = 20;
                 booking.attendedSessions = 0;
                 booking.remainingSessions = 20;
             } else {
-                // Genuinely completed — block further check-ins.
                 return res.status(400).json({ error: "All course sessions have already been completed!" });
             }
         }
@@ -286,7 +286,11 @@ app.get('/api/student/portal-metrics', async (req, res) => {
             return res.status(404).json({ error: "User account not found." });
         }
 
-        const booking = await Booking.findOne({ studentEmail: user.email.toLowerCase().trim() });
+        const { bookingId } = req.query;
+        const query = { studentEmail: user.email.toLowerCase().trim() };
+        if (bookingId) query._id = bookingId;
+
+        const booking = await Booking.findOne(query);
 
         if (!booking) {
             return res.json({
@@ -327,6 +331,33 @@ app.get('/api/student/portal-metrics', async (req, res) => {
             attendanceRate: attendanceCalculated,
             certificateStatus: progressCalculated >= 100 && booking.paymentStatus === 'Paid' ? 'Available' : 'Pending'
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+app.post('/api/bookings', async (req, res) => {
+    try {
+        const { studentEmail } = req.body;
+
+        if (studentEmail) {
+            const existingBookings = await Booking.find({ studentEmail: studentEmail.toLowerCase().trim() });
+            const hasActiveBooking = existingBookings.some(b => {
+                const total = b.totalSessions || 20;
+                const attended = b.attendedSessions || 0;
+                const progress = Math.round((attended / total) * 100);
+                return progress < 100;
+            });
+
+            if (hasActiveBooking) {
+                return res.status(400).json({
+                    error: "You already have an active course or package enrollment. Complete it before booking another."
+                });
+            }
+        }
+
+        const newBooking = new Booking(req.body);
+        await newBooking.save();
+        res.status(201).json({ id: newBooking._id.toString(), ...newBooking.toObject() });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

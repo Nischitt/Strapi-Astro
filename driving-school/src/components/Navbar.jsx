@@ -67,20 +67,10 @@ export default function Navbar() {
 
             {/* COURSES DROPDOWN */}
             <div className="relative group px-3 py-2">
-              <button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
+             <a href="/modern"><button className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
                 Courses 
-              </button>
-              <div className="absolute left-1/2 -translate-x-1/2 top-full opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto bg-white border border-slate-200/60 shadow-xl rounded-xl p-2 w-52 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-<a href="/modern" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
-                  Modern Matrix Course
-                </a>
-              {/* Add this inside your BLOG DROPDOWN or as a new link */}
-
-
-               {/* <a href="/single" className="block px-4 py-2.5 rounded-lg text-slate-600 hover:text-amber-600 hover:bg-slate-50 transition font-medium normal-case tracking-normal text-xs">
-                  Single Session Module
-                </a> */}
-              </div>
+              </button></a>
+     
             </div>
 
             {/* BLOG DROPDOWN */}
@@ -99,10 +89,10 @@ export default function Navbar() {
             </div>
 
             {/* CONTACT NODE */}
-            <a href="/contact" className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
+            <a href="/contact" className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
               Contact
             </a>
-            <a href="/CustomerReviews" className="hidden lg:flex items-center gap-3 font-semibold text-[15px] tracking-wide text-slate-700">
+            <a href="/CustomerReviews" className="flex items-center gap-2 py-2 cursor-pointer transition-all duration-300 hover:text-amber-500 hover:scale-105">
               Reviews
             </a>
 

@@ -1,7 +1,7 @@
 export default function Stats() {
   const stats = [
     ["5000+", "Students"],
-    ["98%", "Pass Rate"],
+    ["100%", "Pass Rate"],
     ["15+", "Years"],
     ["25+", "Instructors"]
   ];

@@ -9,7 +9,7 @@ export default function Courses() {
       image: "/images/6.jpg",
       theory: "04 Hours",
       practical: "18 Hours",
-      desc: "Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain, but because occasionally circumstances occur in which toil pain can procure him some great pleasure."
+      desc: "Develop foundational roadway mastery and master parking and lane configuration rules under professional, patient guidance.",
     },
     {
       id: 2,
@@ -18,7 +18,7 @@ export default function Courses() {
       image: "/images/7.jpg",
       theory: "06 Hours",
       practical: "26 Hours",
-      desc: "Explain to you how all this mistaken denouncing pleasure and praising pain was born and we will give you a complete account of the system, and expound the actual teachings of the explorer."
+      desc: "Dive deep into advanced defensive highway mechanics, intricate adverse weather driving patterns, and comprehensive traffic logic.",
     },
     {
       id: 3,
@@ -27,7 +27,7 @@ export default function Courses() {
       image: "/images/25.jpg",
       theory: "12 Hours",
       practical: "40 Hours",
-      desc: "Duis fringilla nunc velit, scelerisque libero iaculis. Ut pulvinar pretium justo, sit amet egestas. Praesent eget est vel mauris convallis porttitor at safety rules parameters."
+      desc: "Complete professional logistics vehicle certification training containing advanced structural air brake systems and safety control frameworks.",
     },
     {
       id: 4,
@@ -36,93 +36,130 @@ export default function Courses() {
       image: "/images/24.jpg",
       theory: "08 Hours",
       practical: "02 Hours",
-      desc: "Mauris vitae quam vitae neque come ravida. Vivamus libero tellus vitae. Nor again is there anyone who loves or pursues or desires to obtain pain of itself, because it is pain."
-    }
+      desc: "A specialized structural awareness program explicitly built to minimize vehicle friction risks, predict hazards, and protect response habits.",
+    },
   ];
 
   return (
-    <div className="w-full bg-white font-sans text-gray-700 antialiased overflow-x-hidden selection:bg-yellow-500 selection:text-slate-950">
+    <div className="w-full bg-[#F0F8FF] font-sans text-slate-700 antialiased overflow-x-hidden selection:bg-yellow-200 selection:text-slate-900">
       
-      {/* =========================================================================
-          HERO BANNER HEADER
-          ========================================================================= */}
-      <section className="relative h-[240px] bg-neutral-900 flex flex-col items-center justify-center overflow-hidden">
-        <img 
-          src="/images/contact-banner.jpg" 
-          alt="Courses banner background" 
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-30 mix-blend-luminosity"
-        />
-        <div className="relative z-10 text-center text-white">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Our Classic Courses</h1>
-          <div className="flex items-center justify-center gap-2 text-xs font-bold tracking-wider text-neutral-400 uppercase">
-           <a href="/hero"><span className="hover:text-yellow-500 cursor-pointer transition">Home</span></a>
-            <span className="text-yellow-500 font-normal">»</span>
-            <span className="text-white">Courses</span>
+      {/* HERO BANNER HEADER */}
+      <section className="relative h-[320px] bg-gradient-to-br from-purple-600 via-pink-500 to-yellow-400 flex flex-col items-center justify-center overflow-hidden">
+        {/* Background overlay */}
+        <div className="absolute inset-0 bg-[url('/images/contact-banner.jpg')] bg-cover bg-center opacity-10 mix-blend-overlay scale-105" />
+        {/* Decorative grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+        {/* Header Content */}
+        <div className="relative z-20 text-center px-6 max-w-4xl">
+          <span className="text-xs font-semibold tracking-wider text-white bg-gradient-to-r from-pink-400 via-purple-500 to-blue-400 px-4 py-1.5 rounded-full uppercase mb-4 inline-block">
+            Academy Packages
+          </span>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+            Our Colorful Driving Courses
+          </h1>
+          <div className="flex items-center justify-center gap-2 text-sm font-medium text-slate-200">
+            <a href="/hero" className="hover:text-yellow-300 transition-colors duration-150">Home</a>
+            <span className="text-slate-300 select-none">/</span>
+            <span className="text-slate-200">Courses</span>
           </div>
         </div>
       </section>
 
-      {/* =========================================================================
-          COURSES LISTING GRID
-          ========================================================================= */}
-      <section className="py-20 bg-white">
-        <div className="max-w-5xl mx-auto px-6">
-          
-          <div className="text-center mb-16">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-950">Pick a Course to Match Your Skill</h2>
-            <p className="text-xs text-gray-400 mt-1">All packages include certified vehicle maintenance support frameworks.</p>
-          </div>
+      {/* COURSES LISTING SECTION */}
+      <section className="py-24 px-4 md:px-6 max-w-6xl mx-auto">
+        {/* Heading */}
+        <div className="text-center mb-20 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-violet-700 mb-4">
+            Pick a Colorful Course to Match Your Skill
+          </h2>
+          <p className="text-slate-600 text-base leading-relaxed">
+            All curriculum packages are infused with vibrant colors, ensuring an engaging learning experience.
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-16">
-            {courses.map((course) => (
-              <div key={course.id} className="flex flex-col justify-between border border-gray-100 bg-white p-5 shadow-xs rounded-xs">
-                <div className="relative mb-6">
-                  <img src={course.image} alt={course.title} className="w-full aspect-[4/3] object-cover rounded-xs" />
-                  
-                  {/* Price Tag Overlay */}
-                  <div className="absolute top-0 right-4 bg-yellow-500 text-slate-950 px-3 py-2 text-center shadow-md">
-                    <p className="text-[7px] uppercase tracking-tighter font-bold opacity-75">FROM</p>
-                    <p className="text-lg font-black leading-none">${course.price}</p>
-                    <p className="text-[7px] font-medium mt-0.5 whitespace-nowrap">Per Person</p>
-                  </div>
+        {/* Course Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {courses.map((course) => (
+            <div
+              key={course.id}
+              className="group bg-white rounded-3xl border border-gray-300 p-6 flex flex-col justify-between transition-transform duration-300 shadow-lg hover:scale-105 hover:shadow-2xl hover:bg-gradient-to-br from-pink-100 via-violet-100 to-green-100"
+            >
+              {/* Image Container with overlay */}
+              <div className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-tr from-pink-100 via-purple-100 to-blue-100 aspect-[16/10] shadow-md hover:shadow-xl transition-shadow duration-300">
+                <img
+                  src={course.image}
+                  alt={course.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=800&auto=format&fit=crop";
+                  }}
+                />
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Price Badge */}
+                <div className="absolute top-4 right-4 bg-gradient-to-br from-yellow-400 via-orange-400 to-pink-500 backdrop-blur-md text-white px-4 py-2 rounded-xl border border-white/20 shadow-lg hover:scale-105 transition-transform duration-200">
+                  <p className="text-[9px] uppercase tracking-widest font-bold mb-1">FROM</p>
+                  <p className="text-2xl font-extrabold leading-none mb-1">${course.price}</p>
+                  <p className="text-[9px] font-medium">All Inclusive</p>
                 </div>
+              </div>
 
-                <div>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 block mb-1">DRIVING ACADEMY</span>
-                  <h3 className="text-lg font-extrabold text-slate-950 mb-2">{course.title}</h3>
-                  <p className="text-xs text-gray-400 leading-relaxed mb-4">{course.desc}</p>
+              {/* Course Info */}
+              <div>
+                <span className="text-xs font-semibold tracking-wider text-pink-600 uppercase block mb-2">
+                  DRIVING ACADEMY
+                </span>
+                <h3 className="text-2xl font-bold text-violet-900 mb-3 hover:text-pink-600 transition-colors duration-200">
+                  {course.title}
+                </h3>
+                <p className="text-sm text-slate-600 mb-6 leading-relaxed">{course.desc}</p>
 
-                  {/* Metrics Session Grid */}
-                  <div className="grid grid-cols-2 gap-4 border-t border-b py-3 my-4 border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-yellow-500">⏱</span>
-                      <div>
-                        <p className="text-[8px] uppercase font-bold text-slate-950 tracking-wide">THEORY TRAINING</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{course.theory}</p>
-                      </div>
+                {/* Metrics */}
+                <div className="grid grid-cols-2 gap-4 border-t border-b py-4 my-4 border-gray-300">
+                  {/* Theory Hours */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-yellow-100 text-yellow-600 flex items-center justify-center shadow-sm hover:shadow-lg transition-shadow duration-200">
+                      <svg className="w-5 h-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-yellow-500">📍</span>
-                      <div>
-                        <p className="text-[8px] uppercase font-bold text-slate-950 tracking-wide">PRACTICAL TRACK</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{course.practical}</p>
-                      </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">THEORY LESSONS</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5">{course.theory}</p>
                     </div>
                   </div>
-
-                  {/* Warning strip note */}
-                  <div className="bg-slate-950 text-neutral-300 text-[9px] font-medium p-2.5 rounded-xs flex items-center gap-1.5 mb-2">
-                    <span className="w-3.5 h-3.5 rounded-full bg-yellow-500 text-slate-950 flex items-center justify-center text-[9px] font-bold font-mono">!</span>
-                    Excluding dynamic highway assessment tool registrations.
+                  {/* Practical Hours */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shadow-sm hover:shadow-lg transition-shadow duration-200">
+                      <svg className="w-5 h-5 stroke-current fill-none" viewBox="0 0 24 24" strokeWidth="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">PRACTICAL TRACK</p>
+                      <p className="text-sm font-semibold text-gray-800 mt-0.5">{course.practical}</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
 
+              {/* Warning Note */}
+              <div className="bg-yellow-50/70 text-yellow-800 text-xs font-medium px-4 py-3 rounded-xl flex items-center gap-2 border border-yellow-100 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <span className="w-5 h-5 rounded-full bg-yellow-400 text-white flex items-center justify-center text-[11px] font-bold shadow-sm">!</span>
+                <span className="opacity-90">Excludes dynamic state registration highway validation metrics.</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
+      {/* Footer Split Line */}
+      <div className="w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-green-400 opacity-90" />
     </div>
   );
 }
