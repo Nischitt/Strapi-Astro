@@ -1,0 +1,88 @@
+---
+import type { TBanner, THeader, TFooter } from "../types";
+import "../styles/global.css";
+
+import Banner from "../components/Banner.astro";
+import Header from "../components/Header.astro";
+// 1. Import your Footer component here
+import Footer from "../components/Footer.astro"; 
+
+type TStrapiResponse<T> = {
+  success: boolean;
+  data?: T;
+  error?: {
+    status: number;
+    name: string;
+    message: string;
+    details?: Record<string, string[]>;
+  };
+  meta?: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+};
+
+type TGlobalData = {
+	id: number;
+	documentId: string;
+	description: string;
+	createdAt: string;
+	publishedAt: string;
+	banner: TBanner;
+	header: THeader;
+	footer: TFooter;
+}
+
+async function getStrapiGlobalData(): Promise<TStrapiResponse<TGlobalData>>{
+	const BASE_API_URL = import.meta.env.VITE_STRAPI_BASE_URL ?? "http://localhost:1337";
+	const path = "/api/global";
+	const url = new URL(path, BASE_API_URL)
+	const response = await fetch(url.href);
+	const data = await response.json()
+	console.dir(data, {depth: null})
+	return data;
+}
+
+const globalData = await getStrapiGlobalData();
+const {banner, header, footer} = globalData.data ?? {};
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Astro Basics</title>
+	</head>
+<body>
+		
+		{
+			banner && <Banner data = {banner} />
+		}
+		
+		{/* FIX: Spread the footer data, but inject the 'cta' field from the header dataset */}
+		{
+			footer && <Header data = {{ ...footer, cta: header?.cta }} />
+		}
+			
+		<main>
+			<slot /> 
+		</main>
+
+		{
+			header && <Footer data = {header} />
+		}
+
+	</body>
+</html>
+
+<style>
+	
+</style>
