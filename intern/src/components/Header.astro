@@ -1,6 +1,7 @@
 ---
 import type {THeader} from "../types";
 import StrapiImage from "./StrapiImage.astro";
+import AuthStatus from "./AuthStatus.astro";
 
 interface Props{
     data: THeader;
@@ -104,18 +105,21 @@ const styles = {
       }
     </ul>
 
-    {
-      cta && (
-        <a
-          class={styles.cta}
-          href={cta.href}
-          target={cta.isExternal ? "_blank" : "_self"}
-          rel={cta.isExternal ? "noopener noreferrer" : undefined}
-        >
-          {cta.label}
-        </a>
-      )
-    }
+    <div class="hidden lg:flex lg:items-center lg:gap-4">
+      {
+        cta && (
+          <a
+            class={styles.cta}
+            href={cta.href}
+            target={cta.isExternal ? "_blank" : "_self"}
+            rel={cta.isExternal ? "noopener noreferrer" : undefined}
+          >
+            {cta.label}
+          </a>
+        )
+      }
+      <AuthStatus />
+    </div>
   </nav>
 
   <div class={styles.mobileMenu.container} id="navbar-menu">
@@ -156,30 +160,34 @@ const styles = {
       </div>
 
       <div>
-        <ul class={styles.desktopNav}>
-  {
-    /* FIX HERE: Map over navitems */
-    navitems?.map((item) => (
-      <li>
-        <a
-          class={`${styles.navLink.base} ${
-            currentPath === item.href
-              ? styles.navLink.active
-              : styles.navLink.inactive
-          }`}
-          href={item.href}
-          target={item.isExternal ? "_blank" : "_self"}
-          rel={item.isExternal ? "noopener noreferrer" : undefined}
-        >
-          {item.label}
-        </a>
-      </li>
-    ))
-  }
-</ul>
+        {/* FIXED: was reusing styles.desktopNav (which carries "hidden lg:flex",
+            so these links stayed invisible on mobile). Now uses the
+            mobileMenu.navList/navItem/navItemLink styles that were already
+            defined above but never applied. */}
+        <ul class={styles.mobileMenu.navList}>
+          {
+            navitems?.map((item) => (
+              <li class={styles.mobileMenu.navItem}>
+                <a
+                  class={`${styles.mobileMenu.navItemLink} ${
+                    currentPath === item.href ? "bg-green-50 text-green-600" : ""
+                  }`}
+                  href={item.href}
+                  target={item.isExternal ? "_blank" : "_self"}
+                  rel={item.isExternal ? "noopener noreferrer" : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
       </div>
 
       <div class={styles.mobileMenu.footer}>
+        <div class="mb-4">
+          <AuthStatus />
+        </div>
         {
           cta && (
             <a
@@ -197,7 +205,6 @@ const styles = {
   </div>
 </header>
 
-{/* FIX 2: Dynamic JS implementation for responsive layout triggers */}
 <script>
   function setupMobileMenu() {
     const burger = document.getElementById('burger-button');

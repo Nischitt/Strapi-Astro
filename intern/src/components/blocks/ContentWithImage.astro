@@ -1,0 +1,51 @@
+---
+// src/components/blocks/ContentWithImage.astro
+import type { TContentWithImageBlock } from "../../types/landing";
+import StrapiImage from "../StrapiImage.astro";
+
+type Props = TContentWithImageBlock;
+
+const { reversed, heading, content, link, image } = Astro.props;
+---
+
+<section class="max-w-7xl mx-auto px-6 py-16">
+  <div
+    class={`grid md:grid-cols-2 gap-12 items-center ${
+      reversed ? "md:[direction:rtl]" : ""
+    }`}
+  >
+    <div class="md:[direction:ltr]">
+      <h2 class="font-display text-3xl md:text-4xl font-bold uppercase text-[#14171A] mb-4">
+        {heading}
+      </h2>
+      <p class="text-gray-600 mb-8 leading-relaxed">{content}</p>
+      {
+        link && (
+          <a
+            href={link.href}
+            target={link.isExternal ? "_blank" : "_self"}
+            rel={link.isExternal ? "noopener noreferrer" : undefined}
+            class="inline-flex items-center px-7 py-3.5 bg-[#1F6F50] hover:bg-[#195c41] text-white font-bold uppercase tracking-wide text-sm rounded-md transition"
+          >
+            {link.label}
+          </a>
+        )
+      }
+    </div>
+
+    {
+      image?.url && (
+        <div class="md:[direction:ltr] relative">
+          <div class="absolute -inset-3 border-2 border-dashed border-[#F0A93B]/40 rounded-2xl -z-10" />
+          <StrapiImage
+            src={image.url}
+            alt={image.alternativeText || heading}
+            width={640}
+            height={480}
+            class="rounded-2xl w-full h-auto object-cover"
+          />
+        </div>
+      )
+    }
+  </div>
+</section>

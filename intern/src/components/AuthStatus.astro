@@ -1,0 +1,45 @@
+---
+// src/components/AuthStatus.astro
+// Drop this into Header.astro wherever you want it to appear
+// (e.g. next to your nav items or CTA button).
+import { getCurrentUser } from "../types/auth-server";
+
+const user = await getCurrentUser(Astro.cookies);
+---
+
+{
+  user ? (
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-gray-600">Hi, {user.username}</span>
+      <button
+        id="logout-btn"
+        class="text-sm font-bold text-[#1F6F50] hover:underline"
+      >
+        Log out
+      </button>
+    </div>
+  ) : (
+    <div class="flex items-center gap-3">
+      <a
+        href="/login"
+        class="text-sm font-bold text-[#14171A] hover:text-[#1F6F50]"
+      >
+        Log in
+      </a>
+      <a
+        href="/signup"
+        class="text-sm font-bold px-4 py-2 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] rounded-md"
+      >
+        Sign Up
+      </a>
+    </div>
+  )
+}
+
+<script>
+  const btn = document.getElementById("logout-btn");
+  btn?.addEventListener("click", async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  });
+</script>

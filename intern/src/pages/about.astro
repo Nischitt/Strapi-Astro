@@ -1,0 +1,17 @@
+---
+import Layout from "../layouts/Layout.astro";
+import BlockRenderer from "../components/blocks/BlockRenderer.astro";
+import { getPageBySlug} from "../types/loader";
+
+const response = await getPageBySlug("about");
+const page = response?.data?.[0];
+const blocks = page?.blocks ?? [];
+---
+
+<Layout>
+  {
+    blocks.map((block) => (
+      <BlockRenderer block={block} />
+    ))
+  }
+</Layout>

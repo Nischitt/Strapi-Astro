@@ -15,6 +15,7 @@
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
   },
   "dependencies": {
+    "@astrojs/node": "^11.0.2",
     "@strapi/plugin-cloud": "5.49.0",
     "@strapi/plugin-users-permissions": "5.49.0",
     "@strapi/strapi": "5.49.0",
