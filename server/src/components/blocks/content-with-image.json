@@ -24,7 +24,9 @@
       "type": "media",
       "multiple": false,
       "allowedTypes": [
-        "images"
+        "images",
+        "videos",
+        "audios"
       ]
     }
   },

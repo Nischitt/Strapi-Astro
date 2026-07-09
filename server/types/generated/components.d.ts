@@ -18,7 +18,7 @@ export interface BlocksContentWithImage extends Struct.ComponentSchema {
   attributes: {
     content: Schema.Attribute.RichText;
     heading: Schema.Attribute.String;
-    image: Schema.Attribute.Media<'images'>;
+    image: Schema.Attribute.Media<'images' | 'videos' | 'audios'>;
     link: Schema.Attribute.Component<'shared.link', false>;
     reversed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
   };

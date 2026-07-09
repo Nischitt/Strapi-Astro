@@ -6,6 +6,19 @@ import StrapiImage from "../StrapiImage.astro";
 type Props = TContentWithImageBlock;
 
 const { reversed, heading, content, link, image } = Astro.props;
+
+const BASE_API_URL =
+  import.meta.env.VITE_STRAPI_BASE_URL ?? "http://localhost:1337";
+
+const VIDEO_EXTENSIONS = [".mp4", ".webm", ".ogg", ".mov"];
+
+const isVideo =
+  image?.mime?.startsWith("video/") ||
+  VIDEO_EXTENSIONS.some((ext) => image?.url?.toLowerCase().endsWith(ext));
+
+const mediaSrc = image?.url?.startsWith("http")
+  ? image.url
+  : `${BASE_API_URL}${image?.url ?? ""}`;
 ---
 
 <section class="max-w-7xl mx-auto px-6 py-16">
@@ -37,13 +50,26 @@ const { reversed, heading, content, link, image } = Astro.props;
       image?.url && (
         <div class="md:[direction:ltr] relative">
           <div class="absolute -inset-3 border-2 border-dashed border-[#F0A93B]/40 rounded-2xl -z-10" />
-          <StrapiImage
-            src={image.url}
-            alt={image.alternativeText || heading}
-            width={640}
-            height={480}
-            class="rounded-2xl w-full h-auto object-cover"
-          />
+          {isVideo ? (
+            <video
+              src={mediaSrc}
+              controls
+              muted
+              loop
+              playsinline
+              class="rounded-2xl w-full h-auto object-cover"
+            >
+              Your browser doesn't support embedded video.
+            </video>
+          ) : (
+            <StrapiImage
+              src={image.url}
+              alt={image.alternativeText || heading}
+              width={640}
+              height={480}
+              class="rounded-2xl w-full h-auto object-cover"
+            />
+          )}
         </div>
       )
     }

@@ -54,6 +54,12 @@
     "isPopular": {
       "type": "boolean",
       "default": false
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::booking.booking",
+      "mappedBy": "course"
     }
   }
 }

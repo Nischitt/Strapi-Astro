@@ -137,7 +137,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         </dl>
 
         <a
-          href="/contact"
+          href={`/courses/${course.slug}/book`}
           class="block text-center py-3.5 rounded-md bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm transition"
         >
           Book Now

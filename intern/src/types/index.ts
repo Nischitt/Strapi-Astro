@@ -3,6 +3,7 @@ export type TImage = {
     documentId: string;
     alternativeText: string | null;
     url: string;
+    mime?: string; // e.g. "image/png" or "video/mp4" — lets us tell video from image
 };
 
 export type TLink = {

@@ -1,0 +1,51 @@
+---
+// src/pages/courses/[slug]/confirmed.astro
+import Layout from "../../../layouts/Layout.astro";
+
+const { slug } = Astro.params;
+const params = Astro.url.searchParams;
+
+const name = params.get("name");
+const email = params.get("email");
+const courseTitle = params.get("courseTitle");
+const coursePrice = params.get("coursePrice");
+
+// If someone lands here directly without booking details, send them
+// back to the course page instead of showing a broken confirmation.
+if (!name || !email || !courseTitle) {
+  return Astro.redirect(`/courses/${slug}`);
+}
+---
+
+<Layout>
+  <section class="max-w-xl mx-auto px-6 py-24 text-center">
+    <div class="w-16 h-16 rounded-full bg-[#1F6F50]/10 flex items-center justify-center mx-auto mb-6">
+      <span class="text-3xl">✓</span>
+    </div>
+
+    <h1 class="font-display text-3xl font-bold uppercase text-[#14171A] mb-3">
+      Booking Received
+    </h1>
+    <p class="text-gray-600 mb-8">
+      Thanks, {name}! Your booking for <strong>{courseTitle}</strong>
+      {coursePrice && <> (Rs {coursePrice}.00)</>} has been received and is
+      pending confirmation. We'll reach out at <strong>{email}</strong> to
+      confirm your schedule.
+    </p>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <a
+        href="/courses"
+        class="px-6 py-3 border-2 border-[#14171A]/15 hover:border-[#14171A]/30 text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition"
+      >
+        Browse Other Courses
+      </a>
+      <a
+        href="/"
+        class="px-6 py-3 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition"
+      >
+        Back to Home
+      </a>
+    </div>
+  </section>
+</Layout>
