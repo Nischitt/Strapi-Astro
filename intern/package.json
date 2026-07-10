@@ -18,5 +18,8 @@
     "marked": "^18.0.5",
     "qs": "^6.15.3",
     "tailwindcss": "^4.3.2"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.15.1"
   }
 }
