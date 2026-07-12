@@ -1,0 +1,14 @@
+---
+// src/components/blocks/Markdown.astro
+import { marked } from "marked";
+import type { TMarkdownBlock } from "../../types/landing";
+
+type Props = TMarkdownBlock;
+
+const { content } = Astro.props;
+const html = content ? marked.parse(content) : "";
+---
+
+<section class="max-w-3xl mx-auto px-6 py-16 prose prose-headings:font-display prose-headings:uppercase prose-headings:text-[#14171A] prose-a:text-[#1F6F50]">
+  <Fragment set:html={html} />
+</section>
