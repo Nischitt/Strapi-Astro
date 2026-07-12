@@ -2774,15 +2774,6 @@
     qs "6.15.2"
     sift "16.0.1"
 
-"@strapi/plugin-cloud@5.49.0":
-  version "5.49.0"
-  resolved "https://registry.yarnpkg.com/@strapi/plugin-cloud/-/plugin-cloud-5.49.0.tgz#5299f6e6ce901fd423489ea1c467cb3d9d9f6322"
-  integrity sha512-eqYZA0O9uiBsba7rkzw8o900aytPvb4vjmLj4Lw1hzruG1+Ri9lTUSL1gFwexvnNx77XoaFJic58oknAjVWAVg==
-  dependencies:
-    "@strapi/design-system" "2.2.0"
-    "@strapi/icons" "2.2.0"
-    react-intl "6.6.2"
-
 "@strapi/plugin-users-permissions@5.49.0":
   version "5.49.0"
   resolved "https://registry.yarnpkg.com/@strapi/plugin-users-permissions/-/plugin-users-permissions-5.49.0.tgz#e2aa71d51decabc9047e0859f5d88d2f4dbf7a12"
