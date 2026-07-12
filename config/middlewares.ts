@@ -31,6 +31,7 @@ const config: Core.Config.Middlewares = [
       origin: [
         'http://localhost:4321', // Astro dev server
         'http://127.0.0.1:4321',
+        'https://your-astro-frontend.onrender.com',
       ],
       headers: ['Content-Type', 'Authorization', 'Origin', 'Accept'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
