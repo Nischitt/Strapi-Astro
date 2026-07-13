@@ -1,0 +1,164 @@
+---
+// src/pages/courses/[slug].astro
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import StrapiImage from "../../components/StrapiImage.astro";
+import CourseCard from "../../components/courses/CourseCard.astro";
+import { getCourseBySlug, getCourses } from "../../types/loader";
+
+const { slug } = Astro.params;
+const response = await getCourseBySlug(slug as string);
+const course = response?.data?.[0];
+
+if (!course) {
+  return Astro.redirect("/404");
+}
+
+// Pull in a few other courses to show at the bottom, excluding this one.
+const allCoursesResponse = await getCourses();
+const otherCourses = (allCoursesResponse?.data ?? [])
+  .filter((c) => c.slug !== course.slug)
+  .slice(0, 3);
+---
+
+<Layout>
+  <div class="bg-[#F7F6F2] min-h-screen">
+    <!-- Breadcrumb -->
+    <div class="max-w-6xl mx-auto px-6 pt-8">
+      <nav class="text-sm text-gray-500 flex items-center gap-2">
+        <a href="/" class="hover:text-[#1F6F50] transition">Home</a>
+        <span>/</span>
+        <a href="/courses" class="hover:text-[#1F6F50] transition">Courses</a>
+        <span>/</span>
+        <span class="text-[#14171A] font-medium">{course.title}</span>
+      </nav>
+    </div>
+
+    <!-- Hero banner -->
+    <div class="max-w-6xl mx-auto px-6 pt-6">
+      <div class="relative rounded-2xl overflow-hidden bg-[#14171A]">
+        {
+          course.featuredImage?.url ? (
+            <StrapiImage
+              src={course.featuredImage.url}
+              alt={course.featuredImage.alternativeText || course.title}
+              width={1200}
+              height={400}
+              class="w-full h-64 md:h-80 object-cover opacity-70"
+            />
+          ) : (
+            <div class="w-full h-64 md:h-80" />
+          )
+        }
+        <div class="absolute inset-0 bg-gradient-to-t from-[#14171A] via-[#14171A]/40 to-transparent" />
+        <div class="absolute bottom-0 left-0 p-8">
+          {
+            course.level && (
+              <span class="inline-block font-display uppercase tracking-[0.15em] text-xs font-bold text-[#14171A] bg-[#F0A93B] rounded-full px-4 py-1.5 mb-3">
+                {course.level}
+              </span>
+            )
+          }
+          <h1 class="font-display text-3xl md:text-5xl font-bold uppercase text-white leading-tight">
+            {course.title}
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main content + sticky sidebar -->
+    <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_320px] gap-12 items-start">
+      <div>
+        <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+          {course.description}
+        </p>
+
+        <!-- Stats row -->
+        <div class="grid grid-cols-3 gap-4 mb-10">
+          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+            <p class="font-display text-3xl font-bold text-[#1F6F50]">
+              {course.theoryLessons ?? "—"}
+            </p>
+            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+              Theory Lessons
+            </p>
+          </div>
+          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+            <p class="font-display text-3xl font-bold text-[#1F6F50]">
+              {course.practicalLessons ?? "—"}
+            </p>
+            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+              Practical Lessons
+            </p>
+          </div>
+          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+            <p class="font-display text-3xl font-bold text-[#1F6F50]">
+              {course.duration}
+            </p>
+            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+              Duration
+            </p>
+          </div>
+        </div>
+
+        <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] mb-4">
+          Course Details
+        </h2>
+        <div class="prose max-w-none whitespace-pre-line text-gray-700 leading-relaxed">
+          {course.content}
+        </div>
+      </div>
+
+      <!-- Sticky booking sidebar -->
+      <aside class="lg:sticky lg:top-24 bg-white rounded-2xl border border-[#14171A]/10 p-8">
+        <p class="text-sm text-gray-500 mb-1">Course fee</p>
+        <p class="mb-6">
+          <span class="text-sm font-bold text-[#14171A] align-top mr-1">Rs</span>
+          <span class="font-display text-4xl font-bold text-[#14171A]">
+            {course.price}
+          </span>
+          <span class="text-sm text-gray-500">.00</span>
+        </p>
+
+        <dl class="space-y-3 mb-6 text-sm">
+          <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
+            <dt class="text-gray-500">Duration</dt>
+            <dd class="font-bold text-[#14171A]">{course.duration}</dd>
+          </div>
+          {
+            course.level && (
+              <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
+                <dt class="text-gray-500">Level</dt>
+                <dd class="font-bold text-[#14171A]">{course.level}</dd>
+              </div>
+            )
+          }
+        </dl>
+
+        <a
+          href={`/courses/${course.slug}/book`}
+          class="block text-center py-3.5 rounded-md bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm transition"
+        >
+          Book Now
+        </a>
+      </aside>
+    </div>
+
+    <!-- Related courses -->
+    {
+      otherCourses.length > 0 && (
+        <div class="max-w-6xl mx-auto px-6 pb-20">
+          <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] mb-6">
+            Other Courses
+          </h2>
+          <div class="grid md:grid-cols-3 gap-8 items-start">
+            {otherCourses.map((c) => (
+              <CourseCard course={c} />
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </div>
+</Layout>

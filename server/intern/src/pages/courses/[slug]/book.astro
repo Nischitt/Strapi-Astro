@@ -1,0 +1,163 @@
+---
+// src/pages/courses/[slug]/book.astro
+export const prerender = false;
+
+import Layout from "../../../layouts/Layout.astro";
+import { getCourseBySlug } from "../../../types/loader";
+import { getCurrentUser } from "../../../types/auth-server";
+
+const { slug } = Astro.params;
+
+const user = await getCurrentUser(Astro.cookies);
+if (!user) {
+  return Astro.redirect(`/login?redirect=/courses/${slug}/book`);
+}
+
+const response = await getCourseBySlug(slug as string);
+const course = response?.data?.[0];
+
+if (!course) {
+  return Astro.redirect("/404");
+}
+---
+
+<Layout>
+  <section class="max-w-xl mx-auto px-6 py-20">
+    <nav class="text-sm text-gray-500 flex items-center gap-2 mb-8">
+      <a href="/" class="hover:text-[#1F6F50] transition">Home</a>
+      <span>/</span>
+      <a href="/courses" class="hover:text-[#1F6F50] transition">Courses</a>
+      <span>/</span>
+      <a href={`/courses/${course.slug}`} class="hover:text-[#1F6F50] transition">
+        {course.title}
+      </a>
+      <span>/</span>
+      <span class="text-[#14171A] font-medium">Book</span>
+    </nav>
+
+    <h1 class="font-display text-3xl font-bold uppercase text-[#14171A] mb-2">
+      Book {course.title}
+    </h1>
+    <p class="text-gray-500 mb-8">
+      Rs {course.price}.00 — {course.duration}
+    </p>
+
+    <form id="booking-form" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Name
+        </label>
+        <input
+          name="name"
+          type="text"
+          required
+          readonly
+          value={user.username}
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 bg-gray-50 text-gray-500 cursor-not-allowed"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Email
+        </label>
+        <input
+          name="email"
+          type="email"
+          required
+          readonly
+          value={user.email}
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 bg-gray-50 text-gray-500 cursor-not-allowed"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Phone
+        </label>
+        <input
+          name="phone"
+          type="tel"
+          required
+          pattern="^98[0-9]{8}$"
+          placeholder="98XXXXXXXX"
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
+        />
+        <p class="text-xs text-gray-400 mt-1">
+          10-digit number starting with 98 (e.g. 9800000000)
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Notes <span class="text-gray-400">(optional)</span>
+        </label>
+        <textarea
+          name="notes"
+          rows="3"
+          placeholder="Preferred schedule, questions, etc."
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
+        ></textarea>
+      </div>
+
+      <p id="booking-error" class="text-sm text-red-600 hidden"></p>
+
+      <button
+        type="submit"
+        id="booking-submit"
+        class="w-full py-3.5 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition disabled:opacity-50"
+      >
+        Confirm Booking
+      </button>
+    </form>
+  </section>
+</Layout>
+
+<script define:vars={{ courseDocumentId: course.documentId, courseSlug: course.slug, courseTitle: course.title, coursePrice: course.price }}>
+  const form = document.getElementById("booking-form");
+  const errorEl = document.getElementById("booking-error");
+  const submitBtn = document.getElementById("booking-submit");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    errorEl.classList.add("hidden");
+    submitBtn.disabled = true;
+
+    const formData = new FormData(form);
+    const payload = {
+      courseDocumentId,
+      courseSlug,
+      courseTitle,
+      coursePrice,
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      notes: formData.get("notes"),
+    };
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Something went wrong.");
+      }
+
+      const params = new URLSearchParams({
+        name: data.booking.name,
+        email: data.booking.email,
+        courseTitle: data.booking.courseTitle,
+        coursePrice: String(data.booking.coursePrice),
+      });
+      window.location.href = `/courses/${courseSlug}/confirmed?${params.toString()}`;
+    } catch (err) {
+      errorEl.textContent = err instanceof Error ? err.message : "Something went wrong.";
+      errorEl.classList.remove("hidden");
+      submitBtn.disabled = false;
+    }
+  });
+</script>

@@ -1,0 +1,115 @@
+---
+// src/components/courses/CourseCard.astro
+import type { TCourse } from "../../types/course";
+
+type Props = { course: TCourse };
+
+const { course } = Astro.props;
+const isPopular = course.isPopular;
+---
+
+<div
+  class={`relative rounded-2xl border p-8 flex flex-col ${
+    isPopular
+      ? "bg-gray-900 border-gray-900 shadow-xl md:-translate-y-4"
+      : "bg-white border-gray-200"
+  }`}
+>
+  {
+    isPopular && (
+      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-400 text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full">
+        MOST POPULAR
+      </span>
+    )
+  }
+
+  <h3
+    class={`text-lg font-black uppercase tracking-wide mb-2 ${
+      isPopular ? "text-white" : "text-gray-900"
+    }`}
+  >
+    {course.title}
+  </h3>
+  <p
+    class={`text-sm italic mb-6 ${
+      isPopular ? "text-gray-300" : "text-gray-500"
+    }`}
+  >
+    {course.description}
+  </p>
+
+  <div
+    class={`rounded-xl px-6 py-5 mb-6 text-center ${
+      isPopular ? "bg-gray-800" : "bg-gray-50"
+    }`}
+  >
+    <span
+      class={`align-top text-sm font-bold mr-1 ${
+        isPopular ? "text-orange-400" : "text-gray-900"
+      }`}
+    >
+      Rs
+    </span>
+    <span
+      class={`text-4xl font-black ${
+        isPopular ? "text-orange-400" : "text-gray-900"
+      }`}
+    >
+      {course.price}
+    </span>
+    <span
+      class={`text-sm font-bold ${
+        isPopular ? "text-orange-400" : "text-gray-900"
+      }`}
+    >
+      .00
+    </span>
+    <p
+      class={`text-xs tracking-wide mt-1 ${
+        isPopular ? "text-gray-400" : "text-gray-500"
+      }`}
+    >
+      PER COURSE
+    </p>
+  </div>
+
+  <div class={`space-y-3 mb-8 text-sm ${isPopular ? "text-gray-300" : "text-gray-600"}`}>
+    <div
+      class={`flex justify-between pb-3 border-b border-dashed ${
+        isPopular ? "border-gray-700" : "border-gray-200"
+      }`}
+    >
+      <span>Theory Lessons</span>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+        {course.theoryLessons} Lessons
+      </span>
+    </div>
+    <div
+      class={`flex justify-between pb-3 border-b border-dashed ${
+        isPopular ? "border-gray-700" : "border-gray-200"
+      }`}
+    >
+      <span>Practical Lessons</span>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+        {course.practicalLessons} Lessons
+      </span>
+    </div>
+    <div class="flex justify-between">
+      <span>Duration</span>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+        {course.duration}
+      </span>
+    </div>
+  </div>
+
+  <a
+    href={`/courses/${course.slug}`}
+    class={`mt-auto text-center py-3 rounded-xl font-bold transition ${
+      isPopular
+        ? "bg-orange-400 hover:bg-orange-500 text-gray-900"
+        : "bg-gray-900 hover:bg-gray-800 text-white"
+    }`}
+  >
+    BOOK NOW
+  </a>
+</div>

@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-display {
+  font-family: 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.01em;
+}
+@import "tailwindcss";
+/* ADD THIS TO THE TOP OF src/styles/global.css — don't replace the whole
+   file, just paste this block above your existing Tailwind import/content. */
+

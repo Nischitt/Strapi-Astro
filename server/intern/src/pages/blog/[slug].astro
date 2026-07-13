@@ -1,0 +1,51 @@
+---
+// src/pages/blog/[slug].astro
+export const prerender = false; // fetches at request time; see note below for SSG
+
+import Layout from "../../layouts/Layout.astro";
+import StrapiImage from "../../components/StrapiImage.astro";
+import { getArticleBySlug } from "../../types/loader";
+
+const { slug } = Astro.params;
+const response = await getArticleBySlug(slug as string);
+const article = response?.data?.[0];
+
+if (!article) {
+  return Astro.redirect("/404");
+}
+---
+
+<Layout>
+  <article class="max-w-3xl mx-auto px-6 py-16">
+    {
+      article.featuredImage?.url && (
+        <StrapiImage
+          src={article.featuredImage.url}
+          alt={article.featuredImage.alternativeText || article.title}
+          width={800}
+          height={450}
+          class="w-full h-auto rounded-2xl object-cover mb-8"
+        />
+      )
+    }
+
+    <h1 class="text-4xl font-black text-gray-900 mb-3">{article.title}</h1>
+
+    <div class="flex items-center gap-3 mb-8 text-sm text-gray-500">
+      {article.author?.fullName && <span>By {article.author.fullName}</span>}
+      {article.contentTags?.length > 0 && (
+        <div class="flex gap-2">
+          {article.contentTags.map((tag) => (
+            <span class="bg-green-50 text-green-700 px-2 py-1 rounded-full">
+              {tag.title}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div class="prose max-w-none whitespace-pre-line text-gray-700">
+      {article.content}
+    </div>
+  </article>
+</Layout>
