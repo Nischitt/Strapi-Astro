@@ -1,7 +1,9 @@
 ---
 // src/components/AuthStatus.astro
-// Drop this into Header.astro wherever you want it to appear
-// (e.g. next to your nav items or CTA button).
+// Rendered twice in Header.astro (desktop nav + mobile menu), so we use a
+// CLASS here, not an id — duplicate ids on a page mean
+// document.getElementById only ever finds the first one, silently leaving
+// the second button's click listener never attached.
 import { getCurrentUser } from "../types/auth-server";
 
 const user = await getCurrentUser(Astro.cookies);
@@ -12,8 +14,7 @@ const user = await getCurrentUser(Astro.cookies);
     <div class="flex items-center gap-4">
       <span class="text-sm text-gray-600">Hi, {user.username}</span>
       <button
-        id="logout-btn"
-        class="text-sm font-bold text-[#1F6F50] hover:underline"
+        class="logout-btn text-sm font-bold text-[#1F6F50] hover:underline"
       >
         Log out
       </button>
@@ -37,9 +38,18 @@ const user = await getCurrentUser(Astro.cookies);
 }
 
 <script>
-  const btn = document.getElementById("logout-btn");
-  btn?.addEventListener("click", async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  });
+  // Attaches to EVERY .logout-btn on the page (desktop + mobile), not just
+  // the first one — fixes the duplicate-id bug where only one button ever
+  // worked depending on DOM order.
+  function setupLogoutButtons() {
+    document.querySelectorAll(".logout-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/";
+      });
+    });
+  }
+
+  setupLogoutButtons();
+  document.addEventListener("astro:after-swap", setupLogoutButtons);
 </script>
