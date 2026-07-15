@@ -14,9 +14,9 @@ const { user } = Astro.props;
 {
   user ? (
     <div class="flex items-center gap-4">
-      <span class="text-sm text-gray-600">Hi, {user.username}</span>
+      <span class="text-sm text-gray-600 dark:text-gray-300">Hi, {user.username}</span>
       <button
-        class="logout-btn text-sm font-bold text-[#1F6F50] hover:underline"
+        class="logout-btn text-sm font-bold text-[#1F6F50] dark:text-green-400 hover:underline"
       >
         Log out
       </button>
@@ -25,7 +25,7 @@ const { user } = Astro.props;
     <div class="flex items-center gap-3">
       <a
         href="/login"
-        class="text-sm font-bold text-[#14171A] hover:text-[#1F6F50]"
+        class="text-sm font-bold text-[#14171A] dark:text-gray-200 hover:text-[#1F6F50] dark:hover:text-green-400"
       >
         Log in
       </a>

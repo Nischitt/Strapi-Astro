@@ -32,10 +32,10 @@ const remainingBlocks = allBlocks.filter(
       <p class="font-display uppercase tracking-[0.2em] text-[#F0A93B] text-sm mb-4">
         {page?.title ?? "About"}
       </p>
-      <h1 class="font-display text-4xl md:text-5xl font-bold uppercase leading-[1.1] text-[#14171A] mb-6">
+      <h1 class="font-display text-4xl md:text-5xl font-bold uppercase leading-[1.1] text-[#14171A] dark:text-white mb-6">
         {heroBlock?.heading ?? page?.title}
       </h1>
-      <p class="text-lg text-gray-600 leading-relaxed">
+      <p class="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
         {heroBlock?.text ?? page?.Description}
       </p>
     </div>
