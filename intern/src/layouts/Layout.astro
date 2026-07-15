@@ -4,8 +4,8 @@ import "../styles/global.css";
 
 import Banner from "../components/Banner.astro";
 import Header from "../components/Header.astro";
-// 1. Import your Footer component here
-import Footer from "../components/Footer.astro"; 
+import Footer from "../components/Footer.astro";
+import { getCurrentUser } from "../types/auth-server";
 
 type TStrapiResponse<T> = {
   success: boolean;
@@ -43,11 +43,19 @@ async function getStrapiGlobalData(): Promise<TStrapiResponse<TGlobalData>>{
 	const url = new URL(path, BASE_API_URL)
 	const response = await fetch(url.href);
 	const data = await response.json()
-	console.dir(data, {depth: null})
 	return data;
 }
 
-const globalData = await getStrapiGlobalData();
+// Previously: this fetch ran, THEN Header.astro ran its own separate
+// getCurrentUser() fetch afterward — two sequential round-trips to
+// Strapi, one after another. Promise.all runs them concurrently instead,
+// so the total wait is however long the SLOWER of the two takes, not
+// both added together.
+const [globalData, user] = await Promise.all([
+	getStrapiGlobalData(),
+	getCurrentUser(Astro.cookies),
+]);
+
 const {banner, header, footer} = globalData.data ?? {};
 ---
 
@@ -69,7 +77,7 @@ const {banner, header, footer} = globalData.data ?? {};
 		
 		{/* FIX: Spread the footer data, but inject the 'cta' field from the header dataset */}
 		{
-			footer && <Header data = {{ ...footer, cta: header?.cta }} />
+			footer && <Header data = {{ ...footer, cta: header?.cta }} user={user} />
 		}
 			
 		<main>

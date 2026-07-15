@@ -1,12 +1,14 @@
 ---
 // src/components/AuthStatus.astro
-// Rendered twice in Header.astro (desktop nav + mobile menu), so we use a
-// CLASS here, not an id — duplicate ids on a page mean
-// document.getElementById only ever finds the first one, silently leaving
-// the second button's click listener never attached.
-import { getCurrentUser } from "../types/auth-server";
+// Rendered twice in Header.astro (desktop nav + mobile menu). The user is
+// now fetched ONCE in Header.astro and passed down as a prop — previously
+// each instance called getCurrentUser() independently, doubling the
+// network round-trip to Strapi on every single page load.
+interface Props {
+  user: { id: number; username: string; email: string } | null;
+}
 
-const user = await getCurrentUser(Astro.cookies);
+const { user } = Astro.props;
 ---
 
 {
@@ -38,9 +40,6 @@ const user = await getCurrentUser(Astro.cookies);
 }
 
 <script>
-  // Attaches to EVERY .logout-btn on the page (desktop + mobile), not just
-  // the first one — fixes the duplicate-id bug where only one button ever
-  // worked depending on DOM order.
   function setupLogoutButtons() {
     document.querySelectorAll(".logout-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {

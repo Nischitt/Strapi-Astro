@@ -6,14 +6,19 @@ import AuthStatus from "./AuthStatus.astro";
 interface Props{
     data: THeader;
     class?: string;
+    user: { id: number; username: string; email: string } | null;
 }
 
-const {data} = Astro.props;
+const {data, user} = Astro.props;
 if (!data) return null;
 
 const {logo, navitems, cta} = data;
 
 const currentPath = Astro.url.pathname;
+
+// user is now fetched once in Layout.astro (in parallel with the global
+// data fetch) and passed down here — no longer fetched independently in
+// this component.
 
 const styles = {
   header: "sticky top-0 z-50",
@@ -119,7 +124,7 @@ mobileMenu: {    container:
           </a>
         )
       }
-      <AuthStatus />
+      <AuthStatus user={user} />
     </div>
   </nav>
 
@@ -162,10 +167,6 @@ mobileMenu: {    container:
       </div>
 
       <div>
-        {/* FIXED: was reusing styles.desktopNav (which carries "hidden lg:flex",
-            so these links stayed invisible on mobile). Now uses the
-            mobileMenu.navList/navItem/navItemLink styles that were already
-            defined above but never applied. */}
         <ul class={styles.mobileMenu.navList}>
           {
             navitems?.map((item) => (
@@ -188,7 +189,7 @@ mobileMenu: {    container:
 
       <div class={styles.mobileMenu.footer}>
         <div class="mb-4">
-          <AuthStatus />
+          <AuthStatus user={user} />
         </div>
         {
           cta && (
