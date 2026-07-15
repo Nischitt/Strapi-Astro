@@ -37,14 +37,14 @@ if (!article) {
       )
     }
 
-    <h1 class="text-4xl font-black text-gray-900 mb-3">{article.title}</h1>
+    <h1 class="text-4xl font-black text-gray-900 dark:text-white mb-3">{article.title}</h1>
 
-    <div class="flex items-center gap-3 mb-8 text-sm text-gray-500">
+    <div class="flex items-center gap-3 mb-8 text-sm text-gray-500 dark:text-gray-400">
       {article.author?.fullName && <span>By {article.author.fullName}</span>}
       {article.contentTags?.length > 0 && (
         <div class="flex gap-2">
           {article.contentTags.map((tag) => (
-            <span class="bg-green-50 text-green-700 px-2 py-1 rounded-full">
+            <span class="bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
               {tag.title}
             </span>
           ))}
@@ -52,7 +52,7 @@ if (!article) {
       )}
     </div>
 
-    <div class="prose max-w-none whitespace-pre-line text-gray-700">
+    <div class="prose dark:prose-invert max-w-none whitespace-pre-line text-gray-700 dark:text-gray-200">
       {article.content}
     </div>
   </article>

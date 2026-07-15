@@ -26,7 +26,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
   <div class="bg-[#F7F6F2] dark:bg-gray-800 min-h-screen">
     <!-- Breadcrumb -->
     <div class="max-w-6xl mx-auto px-6 pt-8">
-      <nav class="text-sm text-gray-500 flex items-center gap-2">
+      <nav class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
         <a href="/" class="hover:text-[#1F6F50] transition">Home</a>
         <span>/</span>
         <a href="/courses" class="hover:text-[#1F6F50] transition">Courses</a>
@@ -70,7 +70,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
     <!-- Main content + sticky sidebar -->
     <div class="max-w-6xl mx-auto px-6 py-12 grid lg:grid-cols-[1fr_320px] gap-12 items-start">
       <div>
-        <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+        <p class="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
           {course.description}
         </p>
 
@@ -80,7 +80,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.theoryLessons ?? "—"}
             </p>
-            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-1">
               Theory Lessons
             </p>
           </div>
@@ -88,7 +88,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.practicalLessons ?? "—"}
             </p>
-            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-1">
               Practical Lessons
             </p>
           </div>
@@ -96,7 +96,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.duration}
             </p>
-            <p class="text-xs uppercase tracking-wide text-gray-500 mt-1">
+            <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-1">
               Duration
             </p>
           </div>
@@ -105,31 +105,31 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] dark:text-white mb-4">
           Course Details
         </h2>
-        <div class="prose max-w-none whitespace-pre-line text-gray-700 leading-relaxed">
+        <div class="prose dark:prose-invert max-w-none whitespace-pre-line text-gray-700 dark:text-gray-200 leading-relaxed">
           {course.content}
         </div>
       </div>
 
       <!-- Sticky booking sidebar -->
       <aside class="lg:sticky lg:top-24 bg-white dark:bg-gray-700 rounded-2xl border border-[#14171A]/10 dark:border-gray-600 p-8">
-        <p class="text-sm text-gray-500 mb-1">Course fee</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Course fee</p>
         <p class="mb-6">
           <span class="text-sm font-bold text-[#14171A] dark:text-white align-top mr-1">Rs</span>
           <span class="font-display text-4xl font-bold text-[#14171A] dark:text-white">
             {course.price}
           </span>
-          <span class="text-sm text-gray-500">.00</span>
+          <span class="text-sm text-gray-500 dark:text-gray-400">.00</span>
         </p>
 
         <dl class="space-y-3 mb-6 text-sm">
           <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
-            <dt class="text-gray-500">Duration</dt>
+            <dt class="text-gray-500 dark:text-gray-400">Duration</dt>
             <dd class="font-bold text-[#14171A] dark:text-white">{course.duration}</dd>
           </div>
           {
             course.level && (
               <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
-                <dt class="text-gray-500">Level</dt>
+                <dt class="text-gray-500 dark:text-gray-400">Level</dt>
                 <dd class="font-bold text-[#14171A] dark:text-white">{course.level}</dd>
               </div>
             )

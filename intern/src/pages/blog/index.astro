@@ -10,11 +10,11 @@ const articles = response?.data ?? [];
 
 <Layout>
   <section class="max-w-7xl mx-auto px-6 py-16">
-    <h1 class="text-4xl font-black text-gray-900 mb-10">Blog</h1>
+    <h1 class="text-4xl font-black text-gray-900 dark:text-white mb-10">Blog</h1>
 
     {
       articles.length === 0 ? (
-        <p class="text-gray-500">No articles published yet.</p>
+        <p class="text-gray-500 dark:text-gray-400">No articles published yet.</p>
       ) : (
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {articles.map((article) => (

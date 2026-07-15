@@ -10,7 +10,7 @@ const { article } = Astro.props;
 
 <a
   href={`/blog/${article.slug}`}
-  class="block rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition"
+  class="block rounded-2xl border border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 overflow-hidden shadow-sm hover:shadow-md transition"
 >
   {
     article.featuredImage?.url && (
@@ -24,19 +24,19 @@ const { article } = Astro.props;
     )
   }
   <div class="p-5">
-    <h3 class="font-bold text-gray-900 mb-1">{article.title}</h3>
-    <p class="text-sm text-gray-600 mb-3">{article.description}</p>
+    <h3 class="font-bold text-gray-900 dark:text-white mb-1">{article.title}</h3>
+    <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">{article.description}</p>
     <div class="flex items-center justify-between">
       {
         article.author?.fullName && (
-          <p class="text-xs text-gray-400">By {article.author.fullName}</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">By {article.author.fullName}</p>
         )
       }
       {
         article.contentTags?.length > 0 && (
           <div class="flex gap-2">
             {article.contentTags.map((tag) => (
-              <span class="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+              <span class="text-xs bg-green-50 dark:bg-green-900/40 text-green-700 dark:text-green-300 px-2 py-1 rounded-full">
                 {tag.title}
               </span>
             ))}
