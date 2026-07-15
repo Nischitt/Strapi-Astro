@@ -85,7 +85,13 @@ const imageUrl = getStrapiMedia(src);
 // Early return if no valid image URL
 if (!imageUrl) return null;
 
-const safeAlt = alt || `Image ${width}x${height}`;
+// Empty alt is the correct fallback for a screen reader when no real
+// alt text exists — it tells the reader to skip the image, rather than
+// reading out a meaningless placeholder like "Image 800x450".
+const safeAlt = alt?.trim() || '';
+if (import.meta.env.DEV && !alt?.trim()) {
+  console.warn(`StrapiImage: missing alt text for ${src} — set alternativeText in Strapi`);
+}
 const imageClasses = `${styles.image} ${getAspectRatioClass()} ${Astro.props.class || ''}`;
 
 // Generate responsive sizes if not provided

@@ -68,29 +68,65 @@ const {banner, header, footer} = globalData.data ?? {};
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Astro Basics</title>
+		<script is:inline>
+			// Runs before paint to avoid a flash of the wrong theme.
+			const stored = localStorage.getItem('theme');
+			const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+			if (stored === 'dark' || (!stored && prefersDark)) {
+				document.documentElement.classList.add('dark');
+			}
+		</script>
 	</head>
-<body>
-		
+<body class="bg-white dark:bg-gray-800 text-[#14171A] dark:text-gray-200 transition-colors">
+
+		<div id="page-loader" class="fixed top-0 left-0 h-1 bg-[#4F8A63] w-0 opacity-0 z-[100] transition-all duration-300"></div>
+
 		{
 			banner && <Banner data = {banner} />
 		}
-		
-		{/* FIX: Spread the footer data, but inject the 'cta' field from the header dataset */}
+
 		{
-			footer && <Header data = {{ ...footer, cta: header?.cta }} user={user} />
+			header && <Header data = {header} user={user} />
 		}
-			
+
 		<main>
-			<slot /> 
+			<slot />
 		</main>
 
 		{
-			header && <Footer data = {header} />
+			footer && <Footer data = {footer} />
 		}
 
 	</body>
 </html>
 
+<script>
+	// This project uses standard multi-page navigation (no <ClientRouter />
+	// / View Transitions), so astro:before-preparation and astro:page-load
+	// never fire. Show the bar right before the browser unloads the page
+	// for a new navigation — it disappears naturally once the new page
+	// loads, since the bar starts at width 0 / opacity 0 on every fresh load.
+	function showLoader() {
+		const bar = document.getElementById('page-loader');
+		if (bar) {
+			bar.style.opacity = '1';
+			bar.style.width = '80%';
+		}
+	}
+
+	window.addEventListener('beforeunload', showLoader);
+
+	// Covers the bfcache case (back/forward navigation restores the page
+	// without a fresh load) — make sure the bar isn't left visible.
+	window.addEventListener('pageshow', (e) => {
+		const bar = document.getElementById('page-loader');
+		if (bar && (e as PageTransitionEvent).persisted) {
+			bar.style.opacity = '0';
+			bar.style.width = '0';
+		}
+	});
+</script>
+
 <style>
-	
+
 </style>

@@ -24,12 +24,12 @@ const { articles } = Astro.props;
               />
             </div>
           )}
-          <h3 class="font-medium text-neutral-900 mb-1 group-hover:text-neutral-600 transition-colors">
+          <h3 class="font-medium text-neutral-900 dark:text-white mb-1 group-hover:text-neutral-600 dark:group-hover:text-gray-300 transition-colors">
             {article.title}
           </h3>
-          <p class="text-sm text-neutral-600 mb-2 leading-relaxed">{article.description}</p>
+          <p class="text-sm text-neutral-600 dark:text-gray-300 mb-2 leading-relaxed">{article.description}</p>
           {article.author?.fullName && (
-            <p class="text-xs text-neutral-400">By {article.author.fullName}</p>
+            <p class="text-xs text-neutral-400 dark:text-gray-500">By {article.author.fullName}</p>
           )}
         </a>
       ))

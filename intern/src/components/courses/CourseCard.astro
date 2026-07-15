@@ -11,8 +11,8 @@ const isPopular = course.isPopular;
 <div
   class={`relative rounded-2xl border p-8 flex flex-col ${
     isPopular
-      ? "bg-gray-900 border-gray-900 shadow-xl md:-translate-y-4"
-      : "bg-white border-gray-200"
+      ? "bg-gray-900 border-gray-900 dark:bg-gray-950 dark:border-gray-950 shadow-xl md:-translate-y-4"
+      : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
   }`}
 >
   {
@@ -25,14 +25,14 @@ const isPopular = course.isPopular;
 
   <h3
     class={`text-lg font-black uppercase tracking-wide mb-2 ${
-      isPopular ? "text-white" : "text-gray-900"
+      isPopular ? "text-white" : "text-gray-900 dark:text-white"
     }`}
   >
     {course.title}
   </h3>
   <p
     class={`text-sm italic mb-6 ${
-      isPopular ? "text-gray-300" : "text-gray-500"
+      isPopular ? "text-gray-300" : "text-gray-500 dark:text-gray-300"
     }`}
   >
     {course.description}
@@ -40,63 +40,63 @@ const isPopular = course.isPopular;
 
   <div
     class={`rounded-xl px-6 py-5 mb-6 text-center ${
-      isPopular ? "bg-gray-800" : "bg-gray-50"
+      isPopular ? "bg-gray-800" : "bg-gray-50 dark:bg-gray-800"
     }`}
   >
     <span
       class={`align-top text-sm font-bold mr-1 ${
-        isPopular ? "text-orange-400" : "text-gray-900"
+        isPopular ? "text-orange-400" : "text-gray-900 dark:text-white"
       }`}
     >
       Rs
     </span>
     <span
       class={`text-4xl font-black ${
-        isPopular ? "text-orange-400" : "text-gray-900"
+        isPopular ? "text-orange-400" : "text-gray-900 dark:text-white"
       }`}
     >
       {course.price}
     </span>
     <span
       class={`text-sm font-bold ${
-        isPopular ? "text-orange-400" : "text-gray-900"
+        isPopular ? "text-orange-400" : "text-gray-900 dark:text-white"
       }`}
     >
       .00
     </span>
     <p
       class={`text-xs tracking-wide mt-1 ${
-        isPopular ? "text-gray-400" : "text-gray-500"
+        isPopular ? "text-gray-400" : "text-gray-500 dark:text-gray-400"
       }`}
     >
       PER COURSE
     </p>
   </div>
 
-  <div class={`space-y-3 mb-8 text-sm ${isPopular ? "text-gray-300" : "text-gray-600"}`}>
+  <div class={`space-y-3 mb-8 text-sm ${isPopular ? "text-gray-300" : "text-gray-600 dark:text-gray-300"}`}>
     <div
       class={`flex justify-between pb-3 border-b border-dashed ${
-        isPopular ? "border-gray-700" : "border-gray-200"
+        isPopular ? "border-gray-700" : "border-gray-200 dark:border-gray-600"
       }`}
     >
       <span>Theory Lessons</span>
-      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900 dark:text-white"}`}>
         {course.theoryLessons} Lessons
       </span>
     </div>
     <div
       class={`flex justify-between pb-3 border-b border-dashed ${
-        isPopular ? "border-gray-700" : "border-gray-200"
+        isPopular ? "border-gray-700" : "border-gray-200 dark:border-gray-600"
       }`}
     >
       <span>Practical Lessons</span>
-      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900 dark:text-white"}`}>
         {course.practicalLessons} Lessons
       </span>
     </div>
     <div class="flex justify-between">
       <span>Duration</span>
-      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900"}`}>
+      <span class={`font-bold ${isPopular ? "text-white" : "text-gray-900 dark:text-white"}`}>
         {course.duration}
       </span>
     </div>
@@ -107,7 +107,7 @@ const isPopular = course.isPopular;
     class={`mt-auto text-center py-3 rounded-xl font-bold transition ${
       isPopular
         ? "bg-orange-400 hover:bg-orange-500 text-gray-900"
-        : "bg-gray-900 hover:bg-gray-800 text-white"
+        : "bg-gray-900 hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 text-white"
     }`}
   >
     BOOK NOW

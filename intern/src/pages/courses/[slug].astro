@@ -23,7 +23,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
 ---
 
 <Layout>
-  <div class="bg-[#F7F6F2] min-h-screen">
+  <div class="bg-[#F7F6F2] dark:bg-gray-800 min-h-screen">
     <!-- Breadcrumb -->
     <div class="max-w-6xl mx-auto px-6 pt-8">
       <nav class="text-sm text-gray-500 flex items-center gap-2">
@@ -31,7 +31,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         <span>/</span>
         <a href="/courses" class="hover:text-[#1F6F50] transition">Courses</a>
         <span>/</span>
-        <span class="text-[#14171A] font-medium">{course.title}</span>
+        <span class="text-[#14171A] dark:text-white font-medium">{course.title}</span>
       </nav>
     </div>
 
@@ -76,7 +76,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
 
         <!-- Stats row -->
         <div class="grid grid-cols-3 gap-4 mb-10">
-          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+          <div class="bg-white dark:bg-gray-700 rounded-xl border border-[#14171A]/10 dark:border-gray-600 p-5 text-center">
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.theoryLessons ?? "—"}
             </p>
@@ -84,7 +84,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
               Theory Lessons
             </p>
           </div>
-          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+          <div class="bg-white dark:bg-gray-700 rounded-xl border border-[#14171A]/10 dark:border-gray-600 p-5 text-center">
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.practicalLessons ?? "—"}
             </p>
@@ -92,7 +92,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
               Practical Lessons
             </p>
           </div>
-          <div class="bg-white rounded-xl border border-[#14171A]/10 p-5 text-center">
+          <div class="bg-white dark:bg-gray-700 rounded-xl border border-[#14171A]/10 dark:border-gray-600 p-5 text-center">
             <p class="font-display text-3xl font-bold text-[#1F6F50]">
               {course.duration}
             </p>
@@ -102,7 +102,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
           </div>
         </div>
 
-        <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] mb-4">
+        <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] dark:text-white mb-4">
           Course Details
         </h2>
         <div class="prose max-w-none whitespace-pre-line text-gray-700 leading-relaxed">
@@ -111,11 +111,11 @@ const otherCourses = (allCoursesResponse?.data ?? [])
       </div>
 
       <!-- Sticky booking sidebar -->
-      <aside class="lg:sticky lg:top-24 bg-white rounded-2xl border border-[#14171A]/10 p-8">
+      <aside class="lg:sticky lg:top-24 bg-white dark:bg-gray-700 rounded-2xl border border-[#14171A]/10 dark:border-gray-600 p-8">
         <p class="text-sm text-gray-500 mb-1">Course fee</p>
         <p class="mb-6">
-          <span class="text-sm font-bold text-[#14171A] align-top mr-1">Rs</span>
-          <span class="font-display text-4xl font-bold text-[#14171A]">
+          <span class="text-sm font-bold text-[#14171A] dark:text-white align-top mr-1">Rs</span>
+          <span class="font-display text-4xl font-bold text-[#14171A] dark:text-white">
             {course.price}
           </span>
           <span class="text-sm text-gray-500">.00</span>
@@ -124,13 +124,13 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         <dl class="space-y-3 mb-6 text-sm">
           <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
             <dt class="text-gray-500">Duration</dt>
-            <dd class="font-bold text-[#14171A]">{course.duration}</dd>
+            <dd class="font-bold text-[#14171A] dark:text-white">{course.duration}</dd>
           </div>
           {
             course.level && (
               <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
                 <dt class="text-gray-500">Level</dt>
-                <dd class="font-bold text-[#14171A]">{course.level}</dd>
+                <dd class="font-bold text-[#14171A] dark:text-white">{course.level}</dd>
               </div>
             )
           }
@@ -149,7 +149,7 @@ const otherCourses = (allCoursesResponse?.data ?? [])
     {
       otherCourses.length > 0 && (
         <div class="max-w-6xl mx-auto px-6 pb-20">
-          <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] mb-6">
+          <h2 class="font-display text-2xl font-bold uppercase text-[#14171A] dark:text-white mb-6">
             Other Courses
           </h2>
           <div class="grid md:grid-cols-3 gap-8 items-start">

@@ -17,6 +17,14 @@ if (!article) {
 
 <Layout>
   <article class="max-w-3xl mx-auto px-6 py-16">
+    <nav class="text-sm text-gray-500 flex items-center gap-2 mb-8" aria-label="Breadcrumb">
+      <a href="/" class="hover:text-[#1F6F50] transition">Home</a>
+      <span>/</span>
+      <a href="/blog" class="hover:text-[#1F6F50] transition">Blog</a>
+      <span>/</span>
+      <span class="text-[#14171A] font-medium">{article.title}</span>
+    </nav>
+
     {
       article.featuredImage?.url && (
         <StrapiImage

@@ -13,10 +13,10 @@ if (!user) {
 <Layout>
   <section class="max-w-2xl mx-auto px-6 py-20">
     <div class="text-center mb-12">
-      <h1 class="font-display text-4xl font-bold uppercase text-[#14171A] mb-3">
+      <h1 class="font-display text-4xl font-bold uppercase text-[#14171A] dark:text-white mb-3">
         Get In Touch
       </h1>
-      <p class="text-gray-500">
+      <p class="text-gray-500 dark:text-gray-400">
         Questions about a course? Send us a message and we'll get back to
         you shortly.
       </p>
@@ -29,26 +29,29 @@ if (!user) {
         name="company"
         tabindex="-1"
         autocomplete="off"
+        aria-hidden="true"
         class="hidden"
       />
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Name
         </label>
         <input
+          id="name"
           name="name"
           type="text"
           required
           value={user?.username ?? ""}
           readonly={!!user}
-          class={`w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50] ${
-            user ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""
+          aria-describedby={user ? "name-hint" : undefined}
+          class={`w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50] ${
+            user ? "bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed" : ""
           }`}
         />
         {
           user && (
-            <p class="text-xs text-gray-400 mt-1">
+            <p id="name-hint" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Filled in from your account
             </p>
           )
@@ -56,22 +59,24 @@ if (!user) {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Email
         </label>
         <input
+          id="email"
           name="email"
           type="email"
           required
           value={user?.email ?? ""}
           readonly={!!user}
-          class={`w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50] ${
-            user ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""
+          aria-describedby={user ? "email-hint" : undefined}
+          class={`w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50] ${
+            user ? "bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed" : ""
           }`}
         />
         {
           user && (
-            <p class="text-xs text-gray-400 mt-1">
+            <p id="email-hint" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Filled in from your account
             </p>
           )
@@ -79,39 +84,52 @@ if (!user) {
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-          Phone <span class="text-gray-400">(optional)</span>
+        <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Phone <span class="text-gray-400 dark:text-gray-500">(optional)</span>
         </label>
         <input
+          id="phone"
           name="phone"
           type="tel"
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
         />
       </div>
 
       <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Message
         </label>
         <textarea
+          id="message"
           name="message"
           required
           rows="5"
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
+          aria-describedby="contact-error"
+          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
         ></textarea>
       </div>
 
-      <p id="contact-error" class="text-sm text-red-600 hidden"></p>
-      <p id="contact-success" class="text-sm text-[#1F6F50] font-medium hidden">
+      <p id="contact-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+      <p id="contact-success" class="text-sm text-[#1F6F50] dark:text-green-400 font-medium hidden" role="status" aria-live="polite">
         Thanks! Your message has been sent — we'll be in touch soon.
       </p>
 
       <button
         type="submit"
         id="contact-submit"
-        class="w-full py-3.5 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition disabled:opacity-50"
+        class="w-full py-3.5 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        Send Message
+        <svg
+          id="contact-spinner"
+          class="hidden animate-spin h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>Send Message</span>
       </button>
     </form>
   </section>
@@ -124,12 +142,14 @@ if (!user) {
   const submitBtn = document.getElementById(
     "contact-submit"
   ) as HTMLButtonElement;
+  const spinner = document.getElementById("contact-spinner")!;
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errorEl.classList.add("hidden");
     successEl.classList.add("hidden");
     submitBtn.disabled = true;
+    spinner.classList.remove("hidden");
 
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
@@ -154,6 +174,7 @@ if (!user) {
         err instanceof Error ? err.message : "Something went wrong.";
       errorEl.classList.remove("hidden");
       submitBtn.disabled = false;
+      spinner.classList.add("hidden");
     }
   });
 </script>
