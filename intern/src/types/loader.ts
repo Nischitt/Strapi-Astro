@@ -156,14 +156,31 @@ export async function getArticleBySlug(
   return response.json();
 }
 
-/** Fetches all published courses, cheapest first. */
-export async function getCourses(): Promise<
-  TStrapiCollectionResponse<TCourse>
+/** Fetches all categories, in admin-defined order, for the course filter menu. */
+export async function getCategories(): Promise<
+  TStrapiCollectionResponse<import("./category").TCategory>
 > {
   const query = qs.stringify(
+    { sort: ["order:asc", "name:asc"] },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/categories?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  return response.json();
+}
+
+/** Fetches all published courses, cheapest first. Optionally filtered by category slug. */
+export async function getCourses(
+  categorySlug?: string
+): Promise<TStrapiCollectionResponse<TCourse>> {
+  const query = qs.stringify(
     {
-      populate: { featuredImage: IMAGE_FIELDS },
+      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] } },
       sort: ["price:asc"],
+      ...(categorySlug ? { filters: { category: { slug: { $eq: categorySlug } } } } : {}),
     },
     { encodeValuesOnly: true }
   );
@@ -182,7 +199,7 @@ export async function getCourseBySlug(
   const query = qs.stringify(
     {
       filters: { slug: { $eq: slug } },
-      populate: { featuredImage: IMAGE_FIELDS },
+      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] } },
     },
     { encodeValuesOnly: true }
   );

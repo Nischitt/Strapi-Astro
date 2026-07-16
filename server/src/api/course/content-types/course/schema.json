@@ -1,4 +1,4 @@
-{
+﻿{
   "kind": "collectionType",
   "collectionName": "courses",
   "info": {
@@ -37,6 +37,12 @@
         "Intermediate",
         "Advance"
       ]
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "courses"
     },
     "featuredImage": {
       "type": "media",

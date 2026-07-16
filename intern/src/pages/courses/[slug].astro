@@ -53,13 +53,22 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         }
         <div class="absolute inset-0 bg-gradient-to-t from-[#14171A] via-[#14171A]/40 to-transparent" />
         <div class="absolute bottom-0 left-0 p-8">
-          {
-            course.level && (
-              <span class="inline-block font-display uppercase tracking-[0.15em] text-xs font-bold text-[#14171A] bg-[#F0A93B] rounded-full px-4 py-1.5 mb-3">
-                {course.level}
-              </span>
-            )
-          }
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            {
+              course.level && (
+                <span class="inline-block font-display uppercase tracking-[0.15em] text-xs font-bold text-[#14171A] bg-[#F0A93B] rounded-full px-4 py-1.5">
+                  {course.level}
+                </span>
+              )
+            }
+            {
+              course.category && (
+                <span class="inline-block font-display uppercase tracking-[0.15em] text-xs font-bold text-white bg-white/15 border border-white/30 rounded-full px-4 py-1.5">
+                  {course.category.name}
+                </span>
+              )
+            }
+          </div>
           <h1 class="font-display text-3xl md:text-5xl font-bold uppercase text-white leading-tight">
             {course.title}
           </h1>
@@ -122,15 +131,23 @@ const otherCourses = (allCoursesResponse?.data ?? [])
         </p>
 
         <dl class="space-y-3 mb-6 text-sm">
-          <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
+          <div class="flex justify-between border-b border-dashed border-[#14171A]/15 dark:border-gray-600 pb-3">
             <dt class="text-gray-500 dark:text-gray-400">Duration</dt>
             <dd class="font-bold text-[#14171A] dark:text-white">{course.duration}</dd>
           </div>
           {
             course.level && (
-              <div class="flex justify-between border-b border-dashed border-[#14171A]/15 pb-3">
+              <div class="flex justify-between border-b border-dashed border-[#14171A]/15 dark:border-gray-600 pb-3">
                 <dt class="text-gray-500 dark:text-gray-400">Level</dt>
                 <dd class="font-bold text-[#14171A] dark:text-white">{course.level}</dd>
+              </div>
+            )
+          }
+          {
+            course.category && (
+              <div class="flex justify-between pb-3">
+                <dt class="text-gray-500 dark:text-gray-400">Category</dt>
+                <dd class="font-bold text-[#14171A] dark:text-white">{course.category.name}</dd>
               </div>
             )
           }

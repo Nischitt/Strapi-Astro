@@ -11,6 +11,7 @@ export type TCourse = {
   price: number;
   content: string;
   level: string;
+  category: { id: number; documentId: string; name: string; slug: string } | null;
   featuredImage: TImage | null;
   theoryLessons: number;
   practicalLessons: number;
