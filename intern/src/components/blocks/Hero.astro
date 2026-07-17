@@ -43,6 +43,7 @@ const { heading, text, links, image } = Astro.props;
             alt={image.alternativeText || heading}
             width={640}
             height={480}
+            loading="eager"
             class="w-full h-auto object-cover"
           />
         </div>

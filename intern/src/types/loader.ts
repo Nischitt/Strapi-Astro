@@ -192,7 +192,31 @@ export async function getCourses(
   return response.json();
 }
 
-/** Fetches a single course by its slug. */
+/**
+ * Fetches published reviews for a single course, most recent first.
+ * Reviews start as drafts (draftAndPublish is on for this content type)
+ * so this — the public find endpoint — only ever returns ones an admin
+ * has explicitly published, giving you moderation for free with no
+ * custom controller code.
+ */
+export async function getReviewsForCourse(
+  courseSlug: string
+): Promise<TStrapiCollectionResponse<import("./review").TReview>> {
+  const query = qs.stringify(
+    {
+      filters: { course: { slug: { $eq: courseSlug } } },
+      fields: ["rating", "comment", "authorName", "createdAt"],
+      sort: ["createdAt:desc"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/reviews?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  return response.json();
+}
 export async function getCourseBySlug(
   slug: string
 ): Promise<TStrapiCollectionResponse<TCourse>> {
