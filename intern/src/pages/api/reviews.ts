@@ -90,7 +90,14 @@ export const POST: APIRoute = async ({ request, cookies }) => {
   // review under someone else's name. Strapi's draftAndPublish on this
   // content type means this POST lands as a draft: invisible to the
   // public getReviewsForCourse() query until an admin publishes it.
-  const strapiRes = await fetch(`${BASE_API_URL}/api/reviews`, {
+  // ?status=published makes this create-and-publish in one call, so
+  // reviews go live immediately instead of sitting as an unpublished
+  // draft awaiting manual approval in the Strapi admin. Trade-off:
+  // there's no longer a moderation step before a submitted review is
+  // visible to the public — acceptable here since submission already
+  // requires a logged-in account and is rate-limited, but worth
+  // revisiting if spam/inappropriate reviews become a problem.
+  const strapiRes = await fetch(`${BASE_API_URL}/api/reviews?status=published`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -124,7 +124,7 @@ const avatarPalette = [
             }
             {
               course.level && (
-                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-[#111827] bg-[green] rounded-full px-4 py-1.5">
+                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-[#111827] bg-[#FF9F1C] rounded-full px-4 py-1.5">
                   {course.level}
                 </span>
               )
@@ -217,6 +217,47 @@ const avatarPalette = [
                 </div>
               )
             }
+
+            <div class="grid sm:grid-cols-2 gap-8">
+              <div>
+                <h3 class="cdp-heading text-lg font-bold text-[#111827] dark:text-white mb-3">
+                  Requirements
+                </h3>
+                <ul class="space-y-2 text-sm text-[#374151] dark:text-gray-300">
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Minimum age as per local licensing rules
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Valid learner's permit (if applicable)
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Comfortable footwear for practical sessions
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 class="cdp-heading text-lg font-bold text-[#111827] dark:text-white mb-3">
+                  Benefits
+                </h3>
+                <ul class="space-y-2 text-sm text-[#374151] dark:text-gray-300">
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Certified, experienced instructors
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Flexible scheduling around your routine
+                  </li>
+                  <li class="flex items-start gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#FF9F1C] mt-2 flex-shrink-0" />
+                    Modern, dual-controlled training vehicles
+                  </li>
+                </ul>
+              </div>
+            </div>
           </section>
 
           <!-- Reviews -->
@@ -362,7 +403,7 @@ const avatarPalette = [
 
                       <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
                       <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
-                        Thanks! Your review has been submitted and will appear once approved.
+                        Thanks! Your review has been posted.
                       </p>
 
                       <button
@@ -392,7 +433,7 @@ const avatarPalette = [
           <div class="lg:sticky lg:top-24 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
             {
               course.isPopular && (
-                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-white bg-[green] rounded-full px-3 py-1 mb-4">
+                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-white bg-[#FF9F1C] rounded-full px-3 py-1 mb-4">
                   Most Popular
                 </span>
               )
@@ -450,7 +491,7 @@ const avatarPalette = [
 
             <a
               href={`/courses/${course.slug}/book`}
-              class="block text-center py-4 bg-[#4F8A63] hover:bg-[#4F8A63] text-white font-bold uppercase tracking-wide text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+              class="block text-center py-4 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold uppercase tracking-wide text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
             >
               Enroll Now
             </a>
@@ -484,7 +525,7 @@ const avatarPalette = [
                       <div class="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151]" />
                     )}
                     {related.level && (
-                      <span class="cdp-heading absolute top-3 left-3 uppercase tracking-wide text-xs font-bold text-[#111827] bg-[green] rounded-full px-3 py-1">
+                      <span class="cdp-heading absolute top-3 left-3 uppercase tracking-wide text-xs font-bold text-[#111827] bg-[#FF9F1C] rounded-full px-3 py-1">
                         {related.level}
                       </span>
                     )}
@@ -575,7 +616,7 @@ const avatarPalette = [
               <div class="flex items-center gap-1">${stars}</div>
             </div>
             <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed"></p>
-            <p class="text-xs text-amber-600 dark:text-amber-400 mt-2 font-medium">Pending approval</p>
+            
           </div>
         </div>
       `;
