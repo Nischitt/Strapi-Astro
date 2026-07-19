@@ -178,7 +178,7 @@ export async function getCourses(
 ): Promise<TStrapiCollectionResponse<TCourse>> {
   const query = qs.stringify(
     {
-      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] } },
+      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] }, instructor: { fields: ["name", "slug"] } },
       sort: ["price:asc"],
       ...(categorySlug ? { filters: { category: { slug: { $eq: categorySlug } } } } : {}),
     },
@@ -217,13 +217,153 @@ export async function getReviewsForCourse(
   const response = await fetch(url.href);
   return response.json();
 }
+/**
+ * Fetches the current user's own review for a course, if one exists —
+ * used to show "edit your review" instead of "write a review" and to
+ * block duplicate submissions. Uses the trusted server API token
+ * (not the public endpoint) because filtering/reading by a specific
+ * user id runs into the same relation-visibility restriction that
+ * blocked setting the `user` field directly — the Public/Authenticated
+ * roles aren't meant to have broad read access into the User model,
+ * so this needs the same elevated, server-only credential the create
+ * flow already uses.
+ */
+export async function getUserReviewForCourse(
+  courseSlug: string,
+  userId: number
+): Promise<import("./review").TReview | null> {
+  const apiToken = import.meta.env.STRAPI_API_TOKEN;
+  if (!apiToken) return null;
+
+  const query = qs.stringify(
+    {
+      filters: {
+        course: { slug: { $eq: courseSlug } },
+        user: { id: { $eq: userId } },
+      },
+      fields: ["rating", "comment", "authorName", "createdAt"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/reviews?${query}&status=published`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href, {
+    headers: { Authorization: `Bearer ${apiToken}` },
+  });
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  return data?.data?.[0] ?? null;
+}
+
+/** Fetches all published instructors, alphabetical by name. */
+export async function getInstructors(): Promise<
+  TStrapiCollectionResponse<import("./instructor").TInstructor>
+> {
+  const query = qs.stringify(
+    {
+      populate: { photo: IMAGE_FIELDS },
+      sort: ["name:asc"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/instructors?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  return response.json();
+}
+
+/** Fetches a single instructor by slug, including the courses they teach. */
+export async function getInstructorBySlug(
+  slug: string
+): Promise<TStrapiCollectionResponse<import("./instructor").TInstructor & { courses: TCourse[] }>> {
+  const query = qs.stringify(
+    {
+      filters: { slug: { $eq: slug } },
+      populate: {
+        photo: IMAGE_FIELDS,
+        courses: {
+          fields: ["title", "slug", "price", "duration", "level"],
+          populate: { featuredImage: IMAGE_FIELDS },
+        },
+      },
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/instructors?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  return response.json();
+}
+
+/** Fetches published reviews for a single instructor, most recent first. */
+export async function getReviewsForInstructor(
+  instructorSlug: string
+): Promise<TStrapiCollectionResponse<import("./review").TReview>> {
+  const query = qs.stringify(
+    {
+      filters: { instructor: { slug: { $eq: instructorSlug } } },
+      fields: ["rating", "comment", "authorName", "createdAt"],
+      sort: ["createdAt:desc"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/reviews?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  return response.json();
+}
+
+/**
+ * Fetches the current user's own review for an instructor, if one
+ * exists. Same trusted-API-token approach as getUserReviewForCourse —
+ * see that function's comment for why the public endpoint can't do this.
+ */
+export async function getUserReviewForInstructor(
+  instructorSlug: string,
+  userId: number
+): Promise<import("./review").TReview | null> {
+  const apiToken = import.meta.env.STRAPI_API_TOKEN;
+  if (!apiToken) return null;
+
+  const query = qs.stringify(
+    {
+      filters: {
+        instructor: { slug: { $eq: instructorSlug } },
+        user: { id: { $eq: userId } },
+      },
+      fields: ["rating", "comment", "authorName", "createdAt"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/reviews?${query}&status=published`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href, {
+    headers: { Authorization: `Bearer ${apiToken}` },
+  });
+  if (!response.ok) return null;
+
+  const data = await response.json();
+  return data?.data?.[0] ?? null;
+}
+
 export async function getCourseBySlug(
   slug: string
 ): Promise<TStrapiCollectionResponse<TCourse>> {
   const query = qs.stringify(
     {
       filters: { slug: { $eq: slug } },
-      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] } },
+      populate: { featuredImage: IMAGE_FIELDS, category: { fields: ["name", "slug"] }, instructor: { fields: ["name", "slug"] } },
     },
     { encodeValuesOnly: true }
   );

@@ -57,11 +57,22 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     );
   }
 
-  const { courseDocumentId, rating, comment } = await request.json();
+  // Supports reviewing either a course OR an instructor — exactly one
+  // of courseDocumentId / instructorDocumentId should be sent. Kept as
+  // two optional fields rather than a single "targetType" + id pair so
+  // the existing course-review form (already shipped) didn't need any
+  // changes to keep working.
+  const { courseDocumentId, instructorDocumentId, rating, comment } = await request.json();
 
-  if (!courseDocumentId) {
+  if (!courseDocumentId && !instructorDocumentId) {
     return new Response(
-      JSON.stringify({ error: "Missing course reference." }),
+      JSON.stringify({ error: "Missing course or instructor reference." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+  if (courseDocumentId && instructorDocumentId) {
+    return new Response(
+      JSON.stringify({ error: "A review can only target one course or instructor, not both." }),
       { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -85,6 +96,25 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     );
   }
 
+  // Server-side guard against duplicates, even though the UI already
+  // hides the "write a review" form once one exists — the UI check
+  // alone isn't trustworthy since a client could POST directly.
+  const targetField = courseDocumentId ? "course" : "instructor";
+  const targetDocumentId = courseDocumentId || instructorDocumentId;
+  const existingCheck = await fetch(
+    `${BASE_API_URL}/api/reviews?filters[${targetField}][documentId][$eq]=${encodeURIComponent(
+      targetDocumentId
+    )}&filters[user][id][$eq]=${user.id}&status=published`,
+    { headers: { Authorization: `Bearer ${apiToken}` } }
+  );
+  const existingData = await existingCheck.json();
+  if (existingCheck.ok && existingData?.data?.length > 0) {
+    return new Response(
+      JSON.stringify({ error: "You've already reviewed this course. Edit your existing review instead." }),
+      { status: 409, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   // authorName and user are set here from the verified session, never
   // trusted from the request body — the client has no way to submit a
   // review under someone else's name. Strapi's draftAndPublish on this
@@ -105,7 +135,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     },
     body: JSON.stringify({
       data: {
-        course: courseDocumentId,
+        ...(courseDocumentId ? { course: courseDocumentId } : { instructor: instructorDocumentId }),
         user: user.id,
         authorName: user.username,
         rating: numericRating,
@@ -121,6 +151,171 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       JSON.stringify({
         error: data?.error?.message || "Could not submit your review.",
       }),
+      { status: strapiRes.status, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  return new Response(
+    JSON.stringify({ success: true, documentId: data?.data?.documentId }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
+};
+
+// Shared by PUT and DELETE: confirms the review being modified actually
+// belongs to the requesting user before touching it. Fetches with the
+// API token (needed to populate the `user` relation at all, same
+// relation-visibility restriction as everywhere else in this file) and
+// compares the owner's id against the verified session.
+async function verifyReviewOwnership(
+  documentId: string,
+  userId: number,
+  apiToken: string
+): Promise<boolean> {
+  const res = await fetch(
+    `${BASE_API_URL}/api/reviews/${encodeURIComponent(documentId)}?populate=user&status=published`,
+    { headers: { Authorization: `Bearer ${apiToken}` } }
+  );
+  if (!res.ok) return false;
+  const data = await res.json();
+  return data?.data?.user?.id === userId;
+}
+
+export const PUT: APIRoute = async ({ request, cookies }) => {
+  const user = await getCurrentUser(cookies);
+  if (!user) {
+    return new Response(
+      JSON.stringify({ error: "You must be logged in to edit a review." }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const apiToken = import.meta.env.STRAPI_API_TOKEN;
+  if (!apiToken) {
+    return new Response(
+      JSON.stringify({ error: "Reviews are temporarily unavailable. Please try again later." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const ip = getClientIp(request);
+  const rateLimit = checkRateLimit(`reviews:${ip}`, 5, 60 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      { status: 429, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const { reviewDocumentId, rating, comment } = await request.json();
+
+  if (!reviewDocumentId) {
+    return new Response(
+      JSON.stringify({ error: "Missing review reference." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const numericRating = Number(rating);
+  if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+    return new Response(
+      JSON.stringify({ error: "Rating must be a whole number between 1 and 5." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (
+    typeof comment !== "string" ||
+    comment.trim().length < 10 ||
+    comment.length > 1000
+  ) {
+    return new Response(
+      JSON.stringify({ error: "Review must be between 10 and 1000 characters." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const owns = await verifyReviewOwnership(reviewDocumentId, user.id, apiToken);
+  if (!owns) {
+    return new Response(
+      JSON.stringify({ error: "You can only edit your own review." }),
+      { status: 403, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const strapiRes = await fetch(
+    `${BASE_API_URL}/api/reviews/${encodeURIComponent(reviewDocumentId)}?status=published`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiToken}`,
+      },
+      body: JSON.stringify({
+        data: { rating: numericRating, comment: comment.trim() },
+      }),
+    }
+  );
+
+  const data = await strapiRes.json();
+
+  if (!strapiRes.ok) {
+    return new Response(
+      JSON.stringify({ error: data?.error?.message || "Could not update your review." }),
+      { status: strapiRes.status, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  return new Response(
+    JSON.stringify({ success: true }),
+    { status: 200, headers: { "Content-Type": "application/json" } }
+  );
+};
+
+export const DELETE: APIRoute = async ({ request, cookies }) => {
+  const user = await getCurrentUser(cookies);
+  if (!user) {
+    return new Response(
+      JSON.stringify({ error: "You must be logged in to delete a review." }),
+      { status: 401, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const apiToken = import.meta.env.STRAPI_API_TOKEN;
+  if (!apiToken) {
+    return new Response(
+      JSON.stringify({ error: "Reviews are temporarily unavailable. Please try again later." }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const { reviewDocumentId } = await request.json();
+  if (!reviewDocumentId) {
+    return new Response(
+      JSON.stringify({ error: "Missing review reference." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const owns = await verifyReviewOwnership(reviewDocumentId, user.id, apiToken);
+  if (!owns) {
+    return new Response(
+      JSON.stringify({ error: "You can only delete your own review." }),
+      { status: 403, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  const strapiRes = await fetch(
+    `${BASE_API_URL}/api/reviews/${encodeURIComponent(reviewDocumentId)}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${apiToken}` },
+    }
+  );
+
+  if (!strapiRes.ok) {
+    const data = await strapiRes.json().catch(() => null);
+    return new Response(
+      JSON.stringify({ error: data?.error?.message || "Could not delete your review." }),
       { status: strapiRes.status, headers: { "Content-Type": "application/json" } }
     );
   }

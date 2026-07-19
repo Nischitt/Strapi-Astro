@@ -52,6 +52,14 @@ const isPopular = course.isPopular;
     {course.description}
   </p>
 
+  {
+    course.instructor && (
+      <p class={`text-xs mb-6 -mt-4 ${isPopular ? "text-gray-400" : "text-gray-400 dark:text-gray-500"}`}>
+        Taught by <span class="font-semibold">{course.instructor.name}</span>
+      </p>
+    )
+  }
+
   <div
     class={`rounded-xl px-6 py-5 mb-6 text-center ${
       isPopular ? "bg-gray-800" : "bg-gray-50 dark:bg-gray-800"

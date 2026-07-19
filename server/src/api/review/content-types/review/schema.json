@@ -1,4 +1,4 @@
-{
+﻿{
   "kind": "collectionType",
   "collectionName": "reviews",
   "info": {
@@ -30,6 +30,12 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "api::course.course",
+      "inversedBy": "reviews"
+    },
+    "instructor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::instructor.instructor",
       "inversedBy": "reviews"
     },
     "user": {

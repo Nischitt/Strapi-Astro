@@ -627,6 +627,10 @@ export interface ApiCourseCourse extends Struct.CollectionTypeSchema {
     description: Schema.Attribute.Text;
     duration: Schema.Attribute.String;
     featuredImage: Schema.Attribute.Media<'images'>;
+    instructor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::instructor.instructor'
+    >;
     isPopular: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     level: Schema.Attribute.Enumeration<
       ['Beginner', 'Intermediate', 'Advance']
@@ -679,6 +683,43 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiInstructorInstructor extends Struct.CollectionTypeSchema {
+  collectionName: 'instructors';
+  info: {
+    displayName: 'Instructor';
+    pluralName: 'instructors';
+    singularName: 'instructor';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    biography: Schema.Attribute.RichText;
+    certifications: Schema.Attribute.Text;
+    courses: Schema.Attribute.Relation<'oneToMany', 'api::course.course'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    languagesSpoken: Schema.Attribute.String;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::instructor.instructor'
+    > &
+      Schema.Attribute.Private;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    photo: Schema.Attribute.Media<'images'>;
+    publishedAt: Schema.Attribute.DateTime;
+    reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
+    slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vehicleSpecialization: Schema.Attribute.String;
+    yearsOfExperience: Schema.Attribute.Integer;
   };
 }
 
@@ -785,6 +826,10 @@ export interface ApiReviewReview extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    instructor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::instructor.instructor'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -1355,6 +1400,7 @@ declare module '@strapi/strapi' {
       'api::contact-message.contact-message': ApiContactMessageContactMessage;
       'api::course.course': ApiCourseCourse;
       'api::global.global': ApiGlobalGlobal;
+      'api::instructor.instructor': ApiInstructorInstructor;
       'api::landing-page.landing-page': ApiLandingPageLandingPage;
       'api::page.page': ApiPagePage;
       'api::review.review': ApiReviewReview;

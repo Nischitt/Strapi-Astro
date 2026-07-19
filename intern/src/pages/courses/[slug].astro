@@ -4,7 +4,7 @@ export const prerender = false;
 
 import Layout from "../../layouts/Layout.astro";
 import StrapiImage from "../../components/StrapiImage.astro";
-import { getCourseBySlug, getCourses, getReviewsForCourse } from "../../types/loader";
+import { getCourseBySlug, getCourses, getReviewsForCourse, getUserReviewForCourse } from "../../types/loader";
 import { getCurrentUser } from "../../types/auth-server";
 import StarRating from "../../components/reviews/StarRating.astro";
 
@@ -34,6 +34,12 @@ const averageRating =
   reviews.length > 0
     ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
     : 0;
+
+// Only fetched for logged-in users — determines whether to show
+// "Write a Review" or the user's existing review with Edit/Delete.
+const myReview = user
+  ? await getUserReviewForCourse(course.slug, user.id)
+  : null;
 
 // Rating distribution (5-star down to 1-star) for the bar chart in the
 // reviews section — computed from real review data, not fabricated.
@@ -344,7 +350,90 @@ const avatarPalette = [
             }
 
             {
-              user ? (
+              user && myReview ? (
+                <div id="my-review-card" class="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <p class="cdp-heading font-bold text-[#111827] dark:text-white">Your Review</p>
+                    <StarRating rating={myReview.rating} size="sm" />
+                  </div>
+                  <p id="my-review-comment" class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed mb-4">
+                    {myReview.comment}
+                  </p>
+                  <div class="flex gap-3">
+                    <button
+                      id="my-review-edit-toggle"
+                      type="button"
+                      class="text-sm font-bold text-[#FF9F1C] hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      id="my-review-delete"
+                      type="button"
+                      class="text-sm font-bold text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  <div id="review-form-wrapper" class="hidden mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+                    <form id="review-form" data-mode="edit" data-review-id={myReview.documentId} class="space-y-4">
+                      <div>
+                        <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
+                          Your rating
+                        </span>
+                        <div id="star-picker" class="flex gap-1" role="radiogroup" aria-label="Rating">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              type="button"
+                              class="star-picker-btn p-1"
+                              data-value={n}
+                              role="radio"
+                              aria-checked="false"
+                              aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                            >
+                              <svg class="w-7 h-7 text-gray-300 dark:text-gray-600 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                              </svg>
+                            </button>
+                          ))}
+                        </div>
+                        <input type="hidden" id="review-rating" name="rating" value={myReview.rating} required />
+                      </div>
+
+                      <div>
+                        <label for="review-comment" class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1">
+                          Your review
+                        </label>
+                        <textarea
+                          id="review-comment"
+                          name="comment"
+                          rows="4"
+                          required
+                          minlength="10"
+                          maxlength="1000"
+                          placeholder="Share your experience with this course..."
+                          aria-describedby="review-error"
+                          class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9F1C]"
+                        >{myReview.comment}</textarea>
+                      </div>
+
+                      <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+                      <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
+                        Thanks! Your review has been posted.
+                      </p>
+
+                      <button
+                        type="submit"
+                        id="review-submit"
+                        class="px-6 py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold text-sm rounded-lg transition disabled:opacity-50"
+                      >
+                        Submit Review
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : user ? (
                 <div class="mt-6">
                   <button
                     id="review-form-toggle"
@@ -360,7 +449,7 @@ const avatarPalette = [
                   </button>
 
                   <div id="review-form-wrapper" class="hidden mt-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
-                    <form id="review-form" class="space-y-4">
+                    <form id="review-form" data-mode="create" class="space-y-4">
                       <div>
                         <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
                           Your rating
@@ -484,6 +573,19 @@ const avatarPalette = [
                       <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
                     </svg>
                     {course.category.name}
+                  </li>
+                )
+              }
+              {
+                course.instructor && (
+                  <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                    <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                    </svg>
+                    Taught by{" "}
+                    <a href={`/instructors/${course.instructor.slug}`} class="font-bold text-[#FF9F1C] hover:underline">
+                      {course.instructor.name}
+                    </a>
                   </li>
                 )
               }

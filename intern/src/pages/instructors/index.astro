@@ -1,0 +1,77 @@
+---
+// src/pages/instructors/index.astro
+import Layout from "../../layouts/Layout.astro";
+import StrapiImage from "../../components/StrapiImage.astro";
+import { getInstructors } from "../../types/loader";
+
+const response = await getInstructors();
+const instructors = response?.data ?? [];
+---
+
+<Layout>
+  <section class="bg-[#F9FAFB] dark:bg-gray-900 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-6 py-14">
+      <p class="text-sm font-semibold uppercase tracking-widest text-green-600 mb-2">
+        Our Team
+      </p>
+      <h1 class="text-3xl font-bold text-[#111827] dark:text-white mb-4">
+        Meet Your Instructors
+      </h1>
+      <p class="text-[#374151] dark:text-gray-300 max-w-2xl mb-10">
+        Certified, experienced instructors dedicated to helping you become a safe,
+        confident driver.
+      </p>
+
+      {
+        instructors.length === 0 ? (
+          <div class="rounded-xl border dark:border-gray-600 bg-white dark:bg-gray-800 py-20 text-center">
+            <p class="text-gray-500 dark:text-gray-400">Instructors will appear here soon.</p>
+          </div>
+        ) : (
+          <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {instructors.map((instructor) => (
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+                <div class="aspect-[4/3] overflow-hidden bg-gray-100 dark:bg-gray-700">
+                  {instructor.photo ? (
+                    <StrapiImage
+                      src={instructor.photo.url}
+                      alt={instructor.photo.alternativeText || instructor.name}
+                      width={400}
+                      height={300}
+                      class="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div class="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-300 dark:text-gray-600">
+                      {instructor.name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div class="p-5">
+                  <h2 class="font-bold text-lg text-[#111827] dark:text-white mb-1">
+                    {instructor.name}
+                  </h2>
+                  {instructor.yearsOfExperience && (
+                    <p class="text-sm text-[#374151] dark:text-gray-400 mb-3">
+                      {instructor.yearsOfExperience} years of experience
+                    </p>
+                  )}
+                  {instructor.vehicleSpecialization && (
+                    <p class="text-xs text-gray-500 dark:text-gray-500 mb-4">
+                      Specializes in {instructor.vehicleSpecialization}
+                    </p>
+                  )}
+                  <a
+                    href={`/instructors/${instructor.slug}`}
+                    class="inline-block text-sm font-bold text-[#FF9F1C] hover:underline"
+                  >
+                    View Profile →
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+</Layout>

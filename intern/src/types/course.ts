@@ -12,6 +12,7 @@ export type TCourse = {
   content: string;
   level: string;
   category: { id: number; documentId: string; name: string; slug: string } | null;
+  instructor: import("./instructor").TInstructorRef | null;
   featuredImage: TImage | null;
   theoryLessons: number;
   practicalLessons: number;
