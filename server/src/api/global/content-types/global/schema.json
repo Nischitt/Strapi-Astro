@@ -39,10 +39,10 @@
       "type": "string"
     },
     "mapLatitude": {
-      "type": "decimal"
+      "type": "float"
     },
     "mapLongitude": {
-      "type": "decimal"
+      "type": "float"
     }
   }
 }

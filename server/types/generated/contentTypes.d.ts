@@ -680,8 +680,8 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
       'api::global.global'
     > &
       Schema.Attribute.Private;
-    mapLatitude: Schema.Attribute.Decimal;
-    mapLongitude: Schema.Attribute.Decimal;
+    mapLatitude: Schema.Attribute.Float;
+    mapLongitude: Schema.Attribute.Float;
     publishedAt: Schema.Attribute.DateTime;
     title: Schema.Attribute.String;
     updatedAt: Schema.Attribute.DateTime;
