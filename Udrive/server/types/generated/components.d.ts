@@ -18,9 +18,29 @@ export interface BlocksContentWithImage extends Struct.ComponentSchema {
   attributes: {
     content: Schema.Attribute.RichText;
     heading: Schema.Attribute.String;
-    image: Schema.Attribute.Media<'images'>;
+    image: Schema.Attribute.Media<'images' | 'videos' | 'audios'>;
     link: Schema.Attribute.Component<'shared.link', false>;
     reversed: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+  };
+}
+
+export interface BlocksFaqs extends Struct.ComponentSchema {
+  collectionName: 'components_blocks_faqs';
+  info: {
+    displayName: 'Faqs';
+  };
+  attributes: {
+    faq: Schema.Attribute.Component<'shared.card', true>;
+  };
+}
+
+export interface BlocksFeaturedArticles extends Struct.ComponentSchema {
+  collectionName: 'components_blocks_featured_articles';
+  info: {
+    displayName: 'Featured Articles';
+  };
+  attributes: {
+    articles: Schema.Attribute.Relation<'oneToMany', 'api::article.article'>;
   };
 }
 
@@ -44,6 +64,20 @@ export interface BlocksMarkdown extends Struct.ComponentSchema {
   };
   attributes: {
     content: Schema.Attribute.RichText;
+  };
+}
+
+export interface BlocksNewsletter extends Struct.ComponentSchema {
+  collectionName: 'components_blocks_newsletters';
+  info: {
+    displayName: 'Newsletter';
+  };
+  attributes: {
+    formId: Schema.Attribute.String;
+    heading: Schema.Attribute.String;
+    label: Schema.Attribute.String;
+    placeholder: Schema.Attribute.String;
+    text: Schema.Attribute.Text;
   };
 }
 
@@ -152,8 +186,11 @@ declare module '@strapi/strapi' {
     export interface ComponentSchemas {
       'blocks.card-grid': BlocksCardGrid;
       'blocks.content-with-image': BlocksContentWithImage;
+      'blocks.faqs': BlocksFaqs;
+      'blocks.featured-articles': BlocksFeaturedArticles;
       'blocks.hero': BlocksHero;
       'blocks.markdown': BlocksMarkdown;
+      'blocks.newsletter': BlocksNewsletter;
       'blocks.person-card': BlocksPersonCard;
       'blocks.section-heading': BlocksSectionHeading;
       'layout.banner': LayoutBanner;

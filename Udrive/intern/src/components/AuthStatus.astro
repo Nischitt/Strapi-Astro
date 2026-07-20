@@ -1,0 +1,54 @@
+---
+// src/components/AuthStatus.astro
+// Rendered twice in Header.astro (desktop nav + mobile menu). The user is
+// now fetched ONCE in Header.astro and passed down as a prop — previously
+// each instance called getCurrentUser() independently, doubling the
+// network round-trip to Strapi on every single page load.
+interface Props {
+  user: { id: number; username: string; email: string } | null;
+}
+
+const { user } = Astro.props;
+---
+
+{
+  user ? (
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-gray-600 dark:text-gray-300">Hi, {user.username}</span>
+      <button
+        class="logout-btn text-sm font-bold text-[#1F6F50] dark:text-green-400 hover:underline"
+      >
+        Log out
+      </button>
+    </div>
+  ) : (
+    <div class="flex items-center gap-3">
+      <a
+        href="/login"
+        class="text-sm font-bold text-[#14171A] dark:text-gray-200 hover:text-[#1F6F50] dark:hover:text-green-400"
+      >
+        Log in
+      </a>
+      <a
+        href="/signup"
+        class="text-sm font-bold px-4 py-2 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] rounded-md"
+      >
+        Sign Up
+      </a>
+    </div>
+  )
+}
+
+<script>
+  function setupLogoutButtons() {
+    document.querySelectorAll(".logout-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/";
+      });
+    });
+  }
+
+  setupLogoutButtons();
+  document.addEventListener("astro:after-swap", setupLogoutButtons);
+</script>
