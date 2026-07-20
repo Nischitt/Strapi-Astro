@@ -1,0 +1,32 @@
+---
+// src/components/blocks/PersonCard.astro
+import type { TPersonCardBlock } from "../../types/landing";
+import StrapiImage from "../StrapiImage.astro";
+
+type Props = TPersonCardBlock;
+
+const { text, personName, personJob, image } = Astro.props;
+---
+
+<section class="max-w-3xl mx-auto px-6 py-14">
+  <div class="flex flex-col sm:flex-row items-center gap-6 p-8 rounded-lg border border-neutral-200 dark:border-gray-600">
+    {
+      image?.url && (
+        <StrapiImage
+          src={image.url}
+          alt={image.alternativeText || personName}
+          width={96}
+          height={96}
+          class="w-24 h-24 rounded-full object-cover flex-shrink-0"
+        />
+      )
+    }
+    <div class="text-center sm:text-left">
+      <p class="text-neutral-800 dark:text-gray-200 mb-4 leading-relaxed">
+        "{text}"
+      </p>
+      <p class="font-medium text-neutral-900 dark:text-white">{personName}</p>
+      <p class="text-sm text-neutral-400 dark:text-gray-400">{personJob}</p>
+    </div>
+  </div>
+</section>

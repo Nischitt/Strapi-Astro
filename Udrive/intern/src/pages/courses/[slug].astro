@@ -1,0 +1,784 @@
+---
+// src/pages/courses/[slug].astro
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import StrapiImage from "../../components/StrapiImage.astro";
+import { getCourseBySlug, getCourses, getReviewsForCourse, getUserReviewForCourse } from "../../types/loader";
+import { getCurrentUser } from "../../types/auth-server";
+import StarRating from "../../components/reviews/StarRating.astro";
+
+const { slug } = Astro.params;
+const response = await getCourseBySlug(slug as string);
+const course = response?.data?.[0];
+
+if (!course) {
+  return Astro.redirect("/404");
+}
+
+// Pull in a few other courses to show at the bottom, excluding this one,
+// plus this course's reviews and the current user — run concurrently
+// since none of the three depends on another's result.
+const [allCoursesResponse, reviewsResponse, user] = await Promise.all([
+  getCourses(),
+  getReviewsForCourse(course.slug),
+  getCurrentUser(Astro.cookies),
+]);
+
+const otherCourses = (allCoursesResponse?.data ?? [])
+  .filter((c) => c.slug !== course.slug)
+  .slice(0, 3);
+
+const reviews = reviewsResponse?.data ?? [];
+const averageRating =
+  reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 0;
+
+// Only fetched for logged-in users — determines whether to show
+// "Write a Review" or the user's existing review with Edit/Delete.
+const myReview = user
+  ? await getUserReviewForCourse(course.slug, user.id)
+  : null;
+
+// Rating distribution (5-star down to 1-star) for the bar chart in the
+// reviews section — computed from real review data, not fabricated.
+const ratingCounts = [5, 4, 3, 2, 1].map((star) => ({
+  star,
+  count: reviews.filter((r) => r.rating === star).length,
+}));
+const maxRatingCount = Math.max(1, ...ratingCounts.map((r) => r.count));
+
+// "What you'll learn" bullets: derived from the course content field by
+// splitting on newlines when the admin has written it as a list; falls
+// back to a single description line if content is a plain paragraph.
+// This avoids inventing bullet content that was never entered in Strapi.
+const learningPoints = (course.content || course.description || "")
+  .split("\n")
+  .map((line) => line.replace(/^[-*•]\s*/, "").trim())
+  .filter((line) => line.length > 0)
+  .slice(0, 6);
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+const avatarPalette = [
+  "bg-[#FF9F1C]/15 text-[#FF9F1C]",
+  "bg-blue-500/15 text-blue-500",
+  "bg-emerald-500/15 text-emerald-500",
+  "bg-purple-500/15 text-purple-500",
+  "bg-pink-500/15 text-pink-500",
+];
+---
+
+<Layout>
+  <style>
+    /* Scoped to this page — pulls in Poppins for headings without
+       touching the site-wide font system used elsewhere (Barlow
+       Condensed / Inter), per the redesign brief asking specifically
+       for a Poppins/Manrope/Inter-driven hierarchy on this page. */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+    .cdp-heading { font-family: 'Poppins', sans-serif; }
+    .cdp-body { font-family: 'Inter', sans-serif; }
+  </style>
+
+  <div class="cdp-body bg-[#F9FAFB] dark:bg-gray-900 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-6 py-10">
+
+      <!-- Breadcrumb -->
+      <nav class="text-sm text-[#374151] dark:text-gray-400 flex items-center gap-2 mb-6" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#FF9F1C] transition">Home</a>
+        <span>/</span>
+        <a href="/courses" class="hover:text-[#FF9F1C] transition">Courses</a>
+        <span>/</span>
+        <span class="text-[#111827] dark:text-white font-medium">{course.title}</span>
+      </nav>
+
+      <!-- Hero -->
+      <div class="relative rounded-2xl overflow-hidden shadow-lg mb-10">
+        {
+          course.featuredImage ? (
+            <StrapiImage
+              src={course.featuredImage.url}
+              alt={course.featuredImage.alternativeText || course.title}
+              width={1600}
+              height={600}
+              loading="eager"
+              class="w-full aspect-[16/6] object-cover"
+            />
+          ) : (
+            <div class="w-full aspect-[16/6] bg-gradient-to-br from-[#111827] to-[#374151]" />
+          )
+        }
+        <div class="absolute inset-0 bg-gradient-to-t from-[#111827] via-[#111827]/60 to-transparent" />
+
+        <div class="absolute bottom-0 left-0 right-0 p-8 md:p-10">
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            {
+              course.category && (
+                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-white bg-white/15 border border-white/30 backdrop-blur-sm rounded-full px-4 py-1.5">
+                  {course.category.name}
+                </span>
+              )
+            }
+            {
+              course.level && (
+                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-[#111827] bg-[#FF9F1C] rounded-full px-4 py-1.5">
+                  {course.level}
+                </span>
+              )
+            }
+          </div>
+
+          <h1 class="cdp-heading text-[32px] md:text-[44px] leading-tight font-extrabold text-white mb-3 max-w-3xl">
+            {course.title}
+          </h1>
+
+          {
+            reviews.length > 0 && (
+              <div class="flex items-center gap-2">
+                <StarRating rating={averageRating} showNumber />
+                <span class="text-sm text-gray-200">
+                  ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-10">
+
+        <!-- Main column -->
+        <div>
+
+          <!-- Stat cards -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 text-center transition hover:shadow-md">
+              <div class="w-10 h-10 mx-auto mb-3 rounded-lg bg-[#FF9F1C]/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-[#FF9F1C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <p class="cdp-heading text-2xl font-extrabold text-[#111827] dark:text-white">{course.theoryLessons}</p>
+              <p class="text-xs text-[#374151] dark:text-gray-400 mt-1">Theory Lessons</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 text-center transition hover:shadow-md">
+              <div class="w-10 h-10 mx-auto mb-3 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.63c0-.559-.46-1.005-1.019-.991a17.933 17.933 0 00-5.36.943 17.933 17.933 0 00-3.09 1.523 2.056 2.056 0 00-.943 1.732v6.6"/></svg>
+              </div>
+              <p class="cdp-heading text-2xl font-extrabold text-[#111827] dark:text-white">{course.practicalLessons}</p>
+              <p class="text-xs text-[#374151] dark:text-gray-400 mt-1">Practical Lessons</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 text-center transition hover:shadow-md">
+              <div class="w-10 h-10 mx-auto mb-3 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <p class="cdp-heading text-2xl font-extrabold text-[#111827] dark:text-white">{course.duration}</p>
+              <p class="text-xs text-[#374151] dark:text-gray-400 mt-1">Duration</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 text-center transition hover:shadow-md">
+              <div class="w-10 h-10 mx-auto mb-3 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/></svg>
+              </div>
+              <p class="cdp-heading text-2xl font-extrabold text-[#111827] dark:text-white">{reviews.length}</p>
+              <p class="text-xs text-[#374151] dark:text-gray-400 mt-1">Student Reviews</p>
+            </div>
+          </div>
+
+          <!-- About this course -->
+          <section class="mb-14">
+            <h2 class="cdp-heading text-[24px] font-bold text-[#111827] dark:text-white mb-5">
+              About This Course
+            </h2>
+            <p class="text-base text-[#374151] dark:text-gray-300 leading-relaxed max-w-[65ch] mb-8">
+              {course.description}
+            </p>
+
+            {
+              learningPoints.length > 0 && (
+                <div class="mb-8">
+                  <h3 class="cdp-heading text-lg font-bold text-[#111827] dark:text-white mb-4">
+                    What You'll Learn
+                  </h3>
+                  <ul class="grid sm:grid-cols-2 gap-3">
+                    {learningPoints.map((point) => (
+                      <li class="flex items-start gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                        <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                        </svg>
+                        <span>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            }
+
+            
+          </section>
+
+          <!-- Reviews -->
+          <section class="pt-10 border-t border-gray-200 dark:border-gray-700">
+            <h2 class="cdp-heading text-[24px] font-bold text-[#111827] dark:text-white mb-6">
+              Student Reviews
+            </h2>
+
+            {
+              reviews.length > 0 ? (
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 mb-8">
+                  <div class="grid sm:grid-cols-[auto_1fr] gap-8 items-center">
+                    <div class="text-center sm:border-r sm:border-gray-100 dark:sm:border-gray-700 sm:pr-8">
+                      <p class="cdp-heading text-5xl font-extrabold text-[#111827] dark:text-white">
+                        {averageRating.toFixed(1)}
+                      </p>
+                      <StarRating rating={averageRating} class="justify-center my-2" />
+                      <p class="text-sm text-[#374151] dark:text-gray-400">
+                        {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                      </p>
+                    </div>
+                    <div class="space-y-2">
+                      {ratingCounts.map(({ star, count }) => (
+                        <div class="flex items-center gap-3">
+                          <span class="text-xs w-10 text-[#374151] dark:text-gray-400">{star} star</span>
+                          <div class="flex-1 h-2 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden">
+                            <div
+                              class="h-full bg-[#FF9F1C] rounded-full"
+                              style={`width: ${(count / maxRatingCount) * 100}%`}
+                            />
+                          </div>
+                          <span class="text-xs w-6 text-right text-[#374151] dark:text-gray-400">{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p id="reviews-empty-state" class="text-[#374151] dark:text-gray-400 mb-8">
+                  No reviews yet — be the first to share your experience with this course.
+                </p>
+              )
+            }
+
+            <div id="reviews-list" class={`space-y-4 mb-2 ${reviews.length === 0 ? "hidden" : ""}`}>
+              {reviews.map((review, i) => (
+                <div class={`review-item bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 ${i >= 3 ? "hidden" : ""}`}>
+                  <div class="flex items-start gap-3">
+                    <div class={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${avatarPalette[i % avatarPalette.length]}`}>
+                      {initials(review.authorName)}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between gap-2 mb-1">
+                        <p class="font-bold text-[#111827] dark:text-white truncate">{review.authorName}</p>
+                        <StarRating rating={review.rating} size="sm" />
+                      </div>
+                      <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed">
+                        {review.comment}
+                      </p>
+                      <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                        {new Date(review.createdAt).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {
+              reviews.length > 3 && (
+                <button
+                  id="reviews-toggle"
+                  type="button"
+                  class="mt-2 mb-8 text-sm font-bold text-[#FF9F1C] hover:underline"
+                  data-hidden-count={reviews.length - 3}
+                >
+                  Show all {reviews.length} reviews
+                </button>
+              )
+            }
+
+            {
+              user && myReview ? (
+                <div id="my-review-card" class="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+                  <div class="flex items-center justify-between mb-3">
+                    <p class="cdp-heading font-bold text-[#111827] dark:text-white">Your Review</p>
+                    <StarRating rating={myReview.rating} size="sm" />
+                  </div>
+                  <p id="my-review-comment" class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed mb-4">
+                    {myReview.comment}
+                  </p>
+                  <div class="flex gap-3">
+                    <button
+                      id="my-review-edit-toggle"
+                      type="button"
+                      class="text-sm font-bold text-[#FF9F1C] hover:underline"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      id="my-review-delete"
+                      type="button"
+                      class="text-sm font-bold text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
+                  </div>
+
+                  <div id="review-form-wrapper" class="hidden mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+                    <form id="review-form" data-mode="edit" data-review-id={myReview.documentId} class="space-y-4">
+                      <div>
+                        <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
+                          Your rating
+                        </span>
+                        <div id="star-picker" class="flex gap-1" role="radiogroup" aria-label="Rating">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              type="button"
+                              class="star-picker-btn p-1"
+                              data-value={n}
+                              role="radio"
+                              aria-checked="false"
+                              aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                            >
+                              <svg class="w-7 h-7 text-gray-300 dark:text-gray-600 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                              </svg>
+                            </button>
+                          ))}
+                        </div>
+                        <input type="hidden" id="review-rating" name="rating" value={myReview.rating} required />
+                      </div>
+
+                      <div>
+                        <label for="review-comment" class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1">
+                          Your review
+                        </label>
+                        <textarea
+                          id="review-comment"
+                          name="comment"
+                          rows="4"
+                          required
+                          minlength="10"
+                          maxlength="1000"
+                          placeholder="Share your experience with this course..."
+                          aria-describedby="review-error"
+                          class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9F1C]"
+                        >{myReview.comment}</textarea>
+                      </div>
+
+                      <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+                      <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
+                        Thanks! Your review has been posted.
+                      </p>
+
+                      <button
+                        type="submit"
+                        id="review-submit"
+                        class="px-6 py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold text-sm rounded-lg transition disabled:opacity-50"
+                      >
+                        Submit Review
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : user ? (
+                <div class="mt-6">
+                  <button
+                    id="review-form-toggle"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="review-form-wrapper"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 border-[#111827] dark:border-white text-sm font-bold text-[#111827] dark:text-white hover:bg-[#111827] hover:text-white dark:hover:bg-white dark:hover:text-[#111827] transition"
+                  >
+                    <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                    </svg>
+                    Write a Review
+                  </button>
+
+                  <div id="review-form-wrapper" class="hidden mt-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+                    <form id="review-form" data-mode="create" class="space-y-4">
+                      <div>
+                        <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">
+                          Your rating
+                        </span>
+                        <div id="star-picker" class="flex gap-1" role="radiogroup" aria-label="Rating">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button
+                              type="button"
+                              class="star-picker-btn p-1"
+                              data-value={n}
+                              role="radio"
+                              aria-checked="false"
+                              aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                            >
+                              <svg class="w-7 h-7 text-gray-300 dark:text-gray-600 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                              </svg>
+                            </button>
+                          ))}
+                        </div>
+                        <input type="hidden" id="review-rating" name="rating" value="" required />
+                      </div>
+
+                      <div>
+                        <label for="review-comment" class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1">
+                          Your review
+                        </label>
+                        <textarea
+                          id="review-comment"
+                          name="comment"
+                          rows="4"
+                          required
+                          minlength="10"
+                          maxlength="1000"
+                          placeholder="Share your experience with this course..."
+                          aria-describedby="review-error"
+                          class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9F1C]"
+                        ></textarea>
+                      </div>
+
+                      <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+                      <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
+                        Thanks! Your review has been posted.
+                      </p>
+
+                      <button
+                        type="submit"
+                        id="review-submit"
+                        class="px-6 py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold text-sm rounded-lg transition disabled:opacity-50"
+                      >
+                        Submit Review
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                <p class="text-sm text-[#374151] dark:text-gray-400 mt-6">
+                  <a href={`/login?redirect=/courses/${course.slug}`} class="text-[#FF9F1C] font-bold hover:underline">
+                    Log in
+                  </a>{" "}
+                  to leave a review for this course.
+                </p>
+              )
+            }
+          </section>
+        </div>
+
+        <!-- Sidebar -->
+        <aside>
+          <div class="lg:sticky lg:top-24 bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+            {
+              course.isPopular && (
+                <span class="cdp-heading inline-block uppercase tracking-wide text-xs font-bold text-white bg-[#FF9F1C] rounded-full px-3 py-1 mb-4">
+                  Most Popular
+                </span>
+              )
+            }
+
+            <div class="flex items-baseline gap-1 mb-1">
+              <span class="text-sm font-bold text-[#374151] dark:text-gray-400">Rs</span>
+              <span class="cdp-heading text-4xl font-extrabold text-[#111827] dark:text-white">
+                {course.price}
+              </span>
+              <span class="text-sm text-[#374151] dark:text-gray-400">.00</span>
+            </div>
+            <p class="text-xs text-[#374151] dark:text-gray-400 mb-6">one-time course fee</p>
+
+            <ul class="space-y-3 mb-6">
+              <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                </svg>
+                {course.theoryLessons} theory lessons
+              </li>
+              <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                </svg>
+                {course.practicalLessons} practical lessons
+              </li>
+              <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                </svg>
+                {course.duration} duration
+              </li>
+              {
+                course.level && (
+                  <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                    <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                    </svg>
+                    {course.level} level
+                  </li>
+                )
+              }
+              {
+                course.category && (
+                  <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                    <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                    </svg>
+                    {course.category.name}
+                  </li>
+                )
+              }
+              {
+                course.instructor && (
+                  <li class="flex items-center gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                    <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                    </svg>
+                    Taught by{" "}
+                    <a href={`/instructors/${course.instructor.slug}`} class="font-bold text-[#FF9F1C] hover:underline">
+                      {course.instructor.name}
+                    </a>
+                  </li>
+                )
+              }
+            </ul>
+
+            <a
+              href={`/courses/${course.slug}/book`}
+              class="block text-center py-4 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold uppercase tracking-wide text-sm rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              Enroll Now
+            </a>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Related courses -->
+      {
+        otherCourses.length > 0 && (
+          <section class="mt-16 pt-12 border-t border-gray-200 dark:border-gray-700">
+            <h2 class="cdp-heading text-[24px] font-bold text-[#111827] dark:text-white mb-8">
+              Related Courses
+            </h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {otherCourses.map((related) => (
+                <a
+                  href={`/courses/${related.slug}`}
+                  class="group block bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+                >
+                  <div class="relative overflow-hidden aspect-[4/3]">
+                    {related.featuredImage ? (
+                      <StrapiImage
+                        src={related.featuredImage.url}
+                        alt={related.featuredImage.alternativeText || related.title}
+                        width={480}
+                        height={360}
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div class="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151]" />
+                    )}
+                    {related.level && (
+                      <span class="cdp-heading absolute top-3 left-3 uppercase tracking-wide text-xs font-bold text-[#111827] bg-[#FF9F1C] rounded-full px-3 py-1">
+                        {related.level}
+                      </span>
+                    )}
+                  </div>
+                  <div class="p-5">
+                    <h3 class="cdp-heading font-bold text-[#111827] dark:text-white mb-1 group-hover:text-[#FF9F1C] transition-colors">
+                      {related.title}
+                    </h3>
+                    <p class="text-sm text-[#374151] dark:text-gray-400 mb-3 line-clamp-2">
+                      {related.description}
+                    </p>
+                    <div class="flex items-center justify-between">
+                      <span class="cdp-heading text-lg font-extrabold text-[#111827] dark:text-white">
+                        Rs {related.price}
+                      </span>
+                      <span class="text-xs text-[#374151] dark:text-gray-400">
+                        {related.duration}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ courseDocumentId: course.documentId, authorName: user?.username ?? "" }}>
+  function setupReviewForm() {
+    const starPicker = document.getElementById("star-picker");
+    const ratingInput = document.getElementById("review-rating");
+    const form = document.getElementById("review-form");
+    if (!starPicker || !ratingInput || !form) return; // not logged in — form isn't rendered
+
+    const stars = Array.from(starPicker.querySelectorAll(".star-picker-btn"));
+
+    function paintStars(value) {
+      stars.forEach((btn) => {
+        const filled = Number(btn.dataset.value) <= value;
+        const svg = btn.querySelector("svg");
+        svg.classList.toggle("text-[#FF9F1C]", filled);
+        svg.classList.toggle("text-gray-300", !filled);
+        svg.classList.toggle("dark:text-gray-600", !filled);
+        btn.setAttribute("aria-checked", filled && Number(btn.dataset.value) === value ? "true" : "false");
+      });
+    }
+
+    stars.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const value = Number(btn.dataset.value);
+        ratingInput.value = String(value);
+        paintStars(value);
+      });
+      btn.addEventListener("mouseenter", () => paintStars(Number(btn.dataset.value)));
+    });
+    starPicker.addEventListener("mouseleave", () => paintStars(Number(ratingInput.value) || 0));
+
+    const errorEl = document.getElementById("review-error");
+    const successEl = document.getElementById("review-success");
+    const submitBtn = document.getElementById("review-submit");
+
+    function buildPendingReviewCard(rating, comment) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "review-item bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5";
+
+      const initials = (authorName || "")
+        .split(" ")
+        .map((p) => p[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+
+      const stars = Array.from({ length: 5 }, (_, i) => {
+        const filled = i < rating;
+        return `<svg class="w-4.5 h-4.5 ${filled ? "text-[#FF9F1C]" : "text-gray-300 dark:text-gray-600"}" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z"/></svg>`;
+      }).join("");
+
+      wrapper.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-[#FF9F1C]/15 text-[#FF9F1C] flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <p class="font-bold text-[#111827] dark:text-white truncate">${authorName}</p>
+              <div class="flex items-center gap-1">${stars}</div>
+            </div>
+            <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed"></p>
+            
+          </div>
+        </div>
+      `;
+      wrapper.querySelector("p.text-sm").textContent = comment;
+      return wrapper;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.classList.add("hidden");
+
+      if (!ratingInput.value) {
+        errorEl.textContent = "Please select a star rating.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+
+      submitBtn.disabled = true;
+
+      const formData = new FormData(form);
+      const rating = Number(ratingInput.value);
+      const comment = String(formData.get("comment") || "");
+
+      try {
+        const res = await fetch("/api/reviews", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseDocumentId, rating, comment }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data?.error || "Something went wrong.");
+        }
+
+        const list = document.getElementById("reviews-list");
+        const emptyState = document.getElementById("reviews-empty-state");
+        if (list) {
+          list.classList.remove("hidden");
+          list.prepend(buildPendingReviewCard(rating, comment));
+        }
+        emptyState?.classList.add("hidden");
+
+        form.reset();
+        paintStars(0);
+        successEl.classList.remove("hidden");
+        submitBtn.disabled = false;
+
+        setTimeout(() => {
+          document.getElementById("review-form-wrapper")?.classList.add("hidden");
+          document.getElementById("review-form-toggle")?.setAttribute("aria-expanded", "false");
+          successEl.classList.add("hidden");
+        }, 2500);
+      } catch (err) {
+        errorEl.textContent = err instanceof Error ? err.message : "Something went wrong.";
+        errorEl.classList.remove("hidden");
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  function setupReviewFormToggle() {
+    const toggle = document.getElementById("review-form-toggle");
+    const wrapper = document.getElementById("review-form-wrapper");
+    if (!toggle || !wrapper) return;
+
+    toggle.addEventListener("click", () => {
+      const isOpen = !wrapper.classList.contains("hidden");
+      wrapper.classList.toggle("hidden", isOpen);
+      toggle.setAttribute("aria-expanded", String(!isOpen));
+      if (!isOpen) {
+        document.getElementById("review-comment")?.focus();
+      }
+    });
+  }
+
+  function setupReviewsToggle() {
+    const toggle = document.getElementById("reviews-toggle");
+    const list = document.getElementById("reviews-list");
+    if (!toggle || !list) return;
+
+    let expanded = false;
+
+    toggle.addEventListener("click", () => {
+      expanded = !expanded;
+      const items = Array.from(list.querySelectorAll(".review-item"));
+      items.forEach((item, i) => {
+        if (i >= 3) item.classList.toggle("hidden", !expanded);
+      });
+      toggle.textContent = expanded
+        ? "Show fewer reviews"
+        : `Show all ${items.length} reviews`;
+    });
+  }
+
+  setupReviewForm();
+  setupReviewFormToggle();
+  setupReviewsToggle();
+  document.addEventListener("astro:after-swap", setupReviewForm);
+  document.addEventListener("astro:after-swap", setupReviewFormToggle);
+  document.addEventListener("astro:after-swap", setupReviewsToggle);
+</script>

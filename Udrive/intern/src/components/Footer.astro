@@ -1,0 +1,99 @@
+---
+import type { TFooter } from "../types";
+import StrapiImage from "./StrapiImage.astro";
+
+interface Props {
+  data: TFooter;
+  class?: string;
+}
+
+const { data } = Astro.props;
+if (!data) return null;
+
+const { text, logo, navitems, socialLinks } = data;
+const currentYear = new Date().getFullYear();
+---
+
+<footer class={`bg-gray-900 text-gray-300 w-full border-t border-gray-800 py-12 px-6 mt-auto ${Astro.props.class || ""}`}>
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+
+    <div class="flex flex-col items-center md:items-start space-y-3 max-w-sm text-center md:text-left">
+      {
+        logo && (
+          <a href={logo.href} class="flex items-center space-x-2">
+            {logo.image?.url && (
+              <StrapiImage
+                src={logo.image.url}
+                alt={logo.image.alternativeText || logo.label || "Logo"}
+                height={32}
+                width={32}
+                responsive={false}
+              />
+            )}
+            <span class="text-xl font-bold text-white tracking-tight">
+              {logo.label}
+            </span>
+          </a>
+        )
+      }
+      {text && <p class="text-sm text-gray-400">{text}</p>}
+    </div>
+
+    {
+      navitems && navitems.length > 0 && (
+        <nav aria-label="Footer Navigation">
+          <ul class="flex flex-wrap justify-center gap-x-8 gap-y-4">
+            {navitems.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.isExternal ? "_blank" : "_self"}
+                  rel={link.isExternal ? "noopener noreferrer" : undefined}
+                  class="text-sm font-medium hover:text-green-400 transition-colors duration-200"
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+
+    {
+      socialLinks && socialLinks.length > 0 && (
+        <div class="flex space-x-5">
+          {socialLinks.map((social) => (
+            <a
+              href={social.href}
+              target={social.isExternal ? "_blank" : "_self"}
+              rel={social.isExternal ? "noopener noreferrer" : undefined}
+              aria-label={social.label}
+              class="text-gray-400 hover:text-white transition-colors duration-200"
+            >
+              {social.image?.url ? (
+                <StrapiImage
+                  src={social.image.url}
+                  alt=""
+                  height={20}
+                  width={20}
+                  responsive={false}
+                  class="w-5 h-5"
+                />
+              ) : (
+                <span class="w-5 h-5 inline-block rounded-full bg-gray-700" />
+              )}
+            </a>
+          ))}
+        </div>
+      )
+    }
+
+  </div>
+
+  <div class="max-w-7xl mx-auto border-t border-gray-800 mt-8 pt-8 text-center">
+    <p class="text-xs text-gray-500">
+      &copy; {currentYear} uDrive. All rights reserved.
+    </p>
+  </div>
+</footer>

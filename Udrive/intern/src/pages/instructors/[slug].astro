@@ -1,0 +1,554 @@
+---
+// src/pages/instructors/[slug].astro
+export const prerender = false;
+
+import Layout from "../../layouts/Layout.astro";
+import StrapiImage from "../../components/StrapiImage.astro";
+import StarRating from "../../components/reviews/StarRating.astro";
+import {
+  getInstructorBySlug,
+  getReviewsForInstructor,
+  getUserReviewForInstructor,
+} from "../../types/loader";
+import { getCurrentUser } from "../../types/auth-server";
+
+const { slug } = Astro.params;
+const response = await getInstructorBySlug(slug as string);
+const instructor = response?.data?.[0];
+
+if (!instructor) {
+  return Astro.redirect("/404");
+}
+
+const [reviewsResponse, user] = await Promise.all([
+  getReviewsForInstructor(instructor.slug),
+  getCurrentUser(Astro.cookies),
+]);
+
+const reviews = reviewsResponse?.data ?? [];
+const averageRating =
+  reviews.length > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    : 0;
+
+const myReview = user
+  ? await getUserReviewForInstructor(instructor.slug, user.id)
+  : null;
+
+const certifications = (instructor.certifications || "")
+  .split(",")
+  .map((c) => c.trim())
+  .filter(Boolean);
+
+const languages = (instructor.languagesSpoken || "")
+  .split(",")
+  .map((l) => l.trim())
+  .filter(Boolean);
+
+const courses = instructor.courses ?? [];
+
+function initials(name: string) {
+  return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+}
+---
+
+<Layout>
+  <div class="bg-[#F9FAFB] dark:bg-gray-900 min-h-screen">
+    <div class="max-w-[1200px] mx-auto px-6 py-10">
+
+      <nav class="text-sm text-[#374151] dark:text-gray-400 flex items-center gap-2 mb-8" aria-label="Breadcrumb">
+        <a href="/" class="hover:text-[#FF9F1C] transition">Home</a>
+        <span>/</span>
+        <a href="/instructors" class="hover:text-[#FF9F1C] transition">Instructors</a>
+        <span>/</span>
+        <span class="text-[#111827] dark:text-white font-medium">{instructor.name}</span>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-10 mb-14">
+        <!-- Photo + quick facts -->
+        <div>
+          <div class="rounded-2xl overflow-hidden shadow-md aspect-[4/5] bg-gray-100 dark:bg-gray-800 mb-4">
+            {
+              instructor.photo ? (
+                <StrapiImage
+                  src={instructor.photo.url}
+                  alt={instructor.photo.alternativeText || instructor.name}
+                  width={400}
+                  height={500}
+                  loading="eager"
+                  class="w-full h-full object-cover"
+                />
+              ) : (
+                <div class="w-full h-full flex items-center justify-center text-6xl font-bold text-gray-300 dark:text-gray-600">
+                  {initials(instructor.name)}
+                </div>
+              )
+            }
+          </div>
+
+          {
+            reviews.length > 0 && (
+              <div class="flex items-center gap-2 mb-4">
+                <StarRating rating={averageRating} showNumber />
+                <span class="text-sm text-[#374151] dark:text-gray-400">({reviews.length})</span>
+              </div>
+            )
+          }
+
+          {
+            courses.length > 0 && (
+              <a
+                href={`/courses/${courses[0].slug}/book`}
+                class="block text-center py-3.5 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold uppercase tracking-wide text-sm rounded-lg shadow-md hover:shadow-lg transition-all"
+              >
+                Book a Lesson
+              </a>
+            )
+          }
+        </div>
+
+        <!-- Main info -->
+        <div>
+          <h1 class="text-3xl md:text-4xl font-extrabold text-[#111827] dark:text-white mb-4">
+            {instructor.name}
+          </h1>
+
+          <div class="flex flex-wrap gap-3 mb-6">
+            {
+              instructor.yearsOfExperience && (
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm">
+                  {instructor.yearsOfExperience} years experience
+                </span>
+              )
+            }
+            {
+              instructor.vehicleSpecialization && (
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm">
+                  {instructor.vehicleSpecialization}
+                </span>
+              )
+            }
+            {
+              languages.length > 0 && (
+                <span class="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] dark:text-gray-300 bg-white dark:bg-gray-800 rounded-full px-4 py-2 shadow-sm">
+                  Speaks {languages.join(", ")}
+                </span>
+              )
+            }
+          </div>
+
+          {
+            instructor.biography && (
+              <div class="mb-8">
+                <h2 class="text-xl font-bold text-[#111827] dark:text-white mb-3">Biography</h2>
+                <div class="prose dark:prose-invert max-w-[65ch] text-[#374151] dark:text-gray-300 leading-relaxed whitespace-pre-line">
+                  {instructor.biography}
+                </div>
+              </div>
+            )
+          }
+
+          {
+            certifications.length > 0 && (
+              <div class="mb-8">
+                <h2 class="text-xl font-bold text-[#111827] dark:text-white mb-3">Certifications</h2>
+                <ul class="grid sm:grid-cols-2 gap-2.5">
+                  {certifications.map((cert) => (
+                    <li class="flex items-start gap-2.5 text-sm text-[#374151] dark:text-gray-300">
+                      <svg class="w-5 h-5 text-[#FF9F1C] flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                      </svg>
+                      {cert}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          }
+        </div>
+      </div>
+
+      <!-- Courses they teach -->
+      {
+        courses.length > 0 && (
+          <section class="mb-14 pt-10 border-t border-gray-200 dark:border-gray-700">
+            <h2 class="text-2xl font-bold text-[#111827] dark:text-white mb-6">
+              Courses Taught by {instructor.name.split(" ")[0]}
+            </h2>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course) => (
+                <a
+                  href={`/courses/${course.slug}`}
+                  class="group block bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+                >
+                  <div class="relative overflow-hidden aspect-[4/3]">
+                    {course.featuredImage ? (
+                      <StrapiImage
+                        src={course.featuredImage.url}
+                        alt={course.featuredImage.alternativeText || course.title}
+                        width={400}
+                        height={300}
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div class="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151]" />
+                    )}
+                    {course.level && (
+                      <span class="absolute top-3 left-3 uppercase tracking-wide text-xs font-bold text-[#111827] bg-[#FF9F1C] rounded-full px-3 py-1">
+                        {course.level}
+                      </span>
+                    )}
+                  </div>
+                  <div class="p-5">
+                    <h3 class="font-bold text-[#111827] dark:text-white mb-2 group-hover:text-[#FF9F1C] transition-colors">
+                      {course.title}
+                    </h3>
+                    <div class="flex items-center justify-between">
+                      <span class="text-lg font-extrabold text-[#111827] dark:text-white">
+                        Rs {course.price}
+                      </span>
+                      <span class="text-xs text-[#374151] dark:text-gray-400">{course.duration}</span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </section>
+        )
+      }
+
+      <!-- Reviews -->
+      <section class="pt-10 border-t border-gray-200 dark:border-gray-700">
+        <h2 class="text-2xl font-bold text-[#111827] dark:text-white mb-6">
+          Student Reviews
+        </h2>
+
+        {
+          reviews.length === 0 && (
+            <p id="reviews-empty-state" class="text-[#374151] dark:text-gray-400 mb-8">
+              No reviews yet — be the first to share your experience with {instructor.name}.
+            </p>
+          )
+        }
+
+        <div id="reviews-list" class={`space-y-4 mb-2 ${reviews.length === 0 ? "hidden" : ""}`}>
+          {reviews.map((review, i) => (
+            <div class={`review-item bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 ${i >= 3 ? "hidden" : ""}`}>
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#FF9F1C]/15 text-[#FF9F1C] flex items-center justify-center font-bold text-sm flex-shrink-0">
+                  {initials(review.authorName)}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2 mb-1">
+                    <p class="font-bold text-[#111827] dark:text-white truncate">{review.authorName}</p>
+                    <StarRating rating={review.rating} size="sm" />
+                  </div>
+                  <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed">{review.comment}</p>
+                  <p class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    {new Date(review.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {
+          reviews.length > 3 && (
+            <button
+              id="reviews-toggle"
+              type="button"
+              class="mt-2 mb-8 text-sm font-bold text-[#FF9F1C] hover:underline"
+            >
+              Show all {reviews.length} reviews
+            </button>
+          )
+        }
+
+        {
+          user && myReview ? (
+            <div id="my-review-card" class="mt-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+              <div class="flex items-center justify-between mb-3">
+                <p class="font-bold text-[#111827] dark:text-white">Your Review</p>
+                <StarRating rating={myReview.rating} size="sm" />
+              </div>
+              <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed mb-4">{myReview.comment}</p>
+              <div class="flex gap-3">
+                <button id="my-review-edit-toggle" type="button" class="text-sm font-bold text-[#FF9F1C] hover:underline">
+                  Edit
+                </button>
+                <button id="my-review-delete" type="button" class="text-sm font-bold text-red-600 hover:underline">
+                  Delete
+                </button>
+              </div>
+
+              <div id="review-form-wrapper" class="hidden mt-5 pt-5 border-t border-gray-100 dark:border-gray-700">
+                <form id="review-form" data-mode="edit" data-review-id={myReview.documentId} class="space-y-4">
+                  <div>
+                    <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">Your rating</span>
+                    <div id="star-picker" class="flex gap-1" role="radiogroup" aria-label="Rating">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button type="button" class="star-picker-btn p-1" data-value={n} role="radio" aria-checked="false" aria-label={`${n} star${n > 1 ? "s" : ""}`}>
+                          <svg class="w-7 h-7 text-gray-300 dark:text-gray-600 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                    <input type="hidden" id="review-rating" name="rating" value={myReview.rating} required />
+                  </div>
+                  <div>
+                    <label for="review-comment" class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1">Your review</label>
+                    <textarea id="review-comment" name="comment" rows="4" required minlength="10" maxlength="1000" aria-describedby="review-error" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9F1C]">{myReview.comment}</textarea>
+                  </div>
+                  <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+                  <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
+                    Thanks! Your review has been posted.
+                  </p>
+                  <button type="submit" id="review-submit" class="px-6 py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold text-sm rounded-lg transition disabled:opacity-50">
+                    Submit Review
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : user ? (
+            <div class="mt-6">
+              <button id="review-form-toggle" type="button" aria-expanded="false" aria-controls="review-form-wrapper" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 border-[#111827] dark:border-white text-sm font-bold text-[#111827] dark:text-white hover:bg-[#111827] hover:text-white dark:hover:bg-white dark:hover:text-[#111827] transition">
+                <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                </svg>
+                Write a Review
+              </button>
+              <div id="review-form-wrapper" class="hidden mt-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6">
+                <form id="review-form" data-mode="create" class="space-y-4">
+                  <div>
+                    <span class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-2">Your rating</span>
+                    <div id="star-picker" class="flex gap-1" role="radiogroup" aria-label="Rating">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <button type="button" class="star-picker-btn p-1" data-value={n} role="radio" aria-checked="false" aria-label={`${n} star${n > 1 ? "s" : ""}`}>
+                          <svg class="w-7 h-7 text-gray-300 dark:text-gray-600 pointer-events-none" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z" />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                    <input type="hidden" id="review-rating" name="rating" value="" required />
+                  </div>
+                  <div>
+                    <label for="review-comment" class="block text-sm font-medium text-[#374151] dark:text-gray-300 mb-1">Your review</label>
+                    <textarea id="review-comment" name="comment" rows="4" required minlength="10" maxlength="1000" placeholder={`Share your experience learning with ${instructor.name}...`} aria-describedby="review-error" class="w-full px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#FF9F1C]"></textarea>
+                  </div>
+                  <p id="review-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
+                  <p id="review-success" class="text-sm text-emerald-600 dark:text-emerald-400 font-medium hidden" role="status" aria-live="polite">
+                    Thanks! Your review has been posted.
+                  </p>
+                  <button type="submit" id="review-submit" class="px-6 py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold text-sm rounded-lg transition disabled:opacity-50">
+                    Submit Review
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : (
+            <p class="text-sm text-[#374151] dark:text-gray-400 mt-6">
+              <a href={`/login?redirect=/instructors/${instructor.slug}`} class="text-[#FF9F1C] font-bold hover:underline">
+                Log in
+              </a>{" "}
+              to leave a review for {instructor.name}.
+            </p>
+          )
+        }
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ instructorDocumentId: instructor.documentId, authorName: user?.username ?? "" }}>
+  function setupReviewForm() {
+    const starPicker = document.getElementById("star-picker");
+    const ratingInput = document.getElementById("review-rating");
+    const form = document.getElementById("review-form");
+    if (!starPicker || !ratingInput || !form) return;
+
+    const stars = Array.from(starPicker.querySelectorAll(".star-picker-btn"));
+
+    function paintStars(value) {
+      stars.forEach((btn) => {
+        const filled = Number(btn.dataset.value) <= value;
+        const svg = btn.querySelector("svg");
+        svg.classList.toggle("text-[#FF9F1C]", filled);
+        svg.classList.toggle("text-gray-300", !filled);
+        svg.classList.toggle("dark:text-gray-600", !filled);
+        btn.setAttribute("aria-checked", filled && Number(btn.dataset.value) === value ? "true" : "false");
+      });
+    }
+
+    if (ratingInput.value) paintStars(Number(ratingInput.value));
+
+    stars.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const value = Number(btn.dataset.value);
+        ratingInput.value = String(value);
+        paintStars(value);
+      });
+      btn.addEventListener("mouseenter", () => paintStars(Number(btn.dataset.value)));
+    });
+    starPicker.addEventListener("mouseleave", () => paintStars(Number(ratingInput.value) || 0));
+
+    const errorEl = document.getElementById("review-error");
+    const successEl = document.getElementById("review-success");
+    const submitBtn = document.getElementById("review-submit");
+
+    function buildPendingReviewCard(rating, comment) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "review-item bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5";
+      const initials = (authorName || "").split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+      const starsHtml = Array.from({ length: 5 }, (_, i) => {
+        const filled = i < rating;
+        return `<svg class="w-4.5 h-4.5 ${filled ? "text-[#FF9F1C]" : "text-gray-300 dark:text-gray-600"}" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.958a1 1 0 00.95.69h4.162c.969 0 1.371 1.24.588 1.81l-3.368 2.446a1 1 0 00-.363 1.118l1.287 3.957c.3.922-.755 1.688-1.538 1.118l-3.367-2.446a1 1 0 00-1.176 0l-3.367 2.446c-.783.57-1.838-.196-1.538-1.118l1.287-3.957a1 1 0 00-.363-1.118L2.063 9.385c-.783-.57-.38-1.81.588-1.81h4.162a1 1 0 00.951-.69l1.285-3.958z"/></svg>`;
+      }).join("");
+      wrapper.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-full bg-[#FF9F1C]/15 text-[#FF9F1C] flex items-center justify-center font-bold text-sm flex-shrink-0">${initials}</div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+              <p class="font-bold text-[#111827] dark:text-white truncate">${authorName}</p>
+              <div class="flex items-center gap-1">${starsHtml}</div>
+            </div>
+            <p class="text-sm text-[#374151] dark:text-gray-300 leading-relaxed"></p>
+          </div>
+        </div>
+      `;
+      wrapper.querySelector("p.text-sm").textContent = comment;
+      return wrapper;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.classList.add("hidden");
+
+      if (!ratingInput.value) {
+        errorEl.textContent = "Please select a star rating.";
+        errorEl.classList.remove("hidden");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      const formData = new FormData(form);
+      const rating = Number(ratingInput.value);
+      const comment = String(formData.get("comment") || "");
+      const mode = form.dataset.mode;
+      const reviewId = form.dataset.reviewId;
+
+      try {
+        const res = await fetch("/api/reviews", {
+          method: mode === "edit" ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            mode === "edit"
+              ? { reviewDocumentId: reviewId, rating, comment }
+              : { instructorDocumentId, rating, comment }
+          ),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Something went wrong.");
+
+        if (mode === "create") {
+          const list = document.getElementById("reviews-list");
+          const emptyState = document.getElementById("reviews-empty-state");
+          if (list) {
+            list.classList.remove("hidden");
+            list.prepend(buildPendingReviewCard(rating, comment));
+          }
+          emptyState?.classList.add("hidden");
+          form.reset();
+          paintStars(0);
+        } else {
+          const cardComment = document.querySelector("#my-review-card p.text-sm.leading-relaxed");
+          if (cardComment) cardComment.textContent = comment;
+        }
+
+        successEl.classList.remove("hidden");
+        submitBtn.disabled = false;
+
+        setTimeout(() => {
+          document.getElementById("review-form-wrapper")?.classList.add("hidden");
+          document.getElementById("review-form-toggle")?.setAttribute("aria-expanded", "false");
+          document.getElementById("my-review-edit-toggle")?.setAttribute("aria-expanded", "false");
+          successEl.classList.add("hidden");
+        }, 2500);
+      } catch (err) {
+        errorEl.textContent = err instanceof Error ? err.message : "Something went wrong.";
+        errorEl.classList.remove("hidden");
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
+  function setupFormToggles() {
+    const writeToggle = document.getElementById("review-form-toggle");
+    const editToggle = document.getElementById("my-review-edit-toggle");
+    const wrapper = document.getElementById("review-form-wrapper");
+    if (wrapper) {
+      [writeToggle, editToggle].forEach((toggle) => {
+        if (!toggle) return;
+        toggle.addEventListener("click", () => {
+          const isOpen = !wrapper.classList.contains("hidden");
+          wrapper.classList.toggle("hidden", isOpen);
+          toggle.setAttribute("aria-expanded", String(!isOpen));
+          if (!isOpen) document.getElementById("review-comment")?.focus();
+        });
+      });
+    }
+
+    const deleteBtn = document.getElementById("my-review-delete");
+    deleteBtn?.addEventListener("click", async () => {
+      const form = document.getElementById("review-form");
+      const reviewId = form?.dataset.reviewId;
+      if (!reviewId) return;
+      if (!confirm("Delete your review? This can't be undone.")) return;
+
+      try {
+        const res = await fetch("/api/reviews", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reviewDocumentId: reviewId }),
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data?.error || "Could not delete review.");
+        }
+        document.getElementById("my-review-card")?.remove();
+        document.getElementById("reviews-list")?.querySelector(`[data-review-id="${reviewId}"]`)?.remove();
+        location.reload();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Could not delete review.");
+      }
+    });
+  }
+
+  function setupReviewsToggle() {
+    const toggle = document.getElementById("reviews-toggle");
+    const list = document.getElementById("reviews-list");
+    if (!toggle || !list) return;
+    let expanded = false;
+    toggle.addEventListener("click", () => {
+      expanded = !expanded;
+      const items = Array.from(list.querySelectorAll(".review-item"));
+      items.forEach((item, i) => {
+        if (i >= 3) item.classList.toggle("hidden", !expanded);
+      });
+      toggle.textContent = expanded ? "Show fewer reviews" : `Show all ${items.length} reviews`;
+    });
+  }
+
+  setupReviewForm();
+  setupFormToggles();
+  setupReviewsToggle();
+  document.addEventListener("astro:after-swap", setupReviewForm);
+  document.addEventListener("astro:after-swap", setupFormToggles);
+  document.addEventListener("astro:after-swap", setupReviewsToggle);
+</script>

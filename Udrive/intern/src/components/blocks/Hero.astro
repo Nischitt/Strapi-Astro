@@ -1,0 +1,53 @@
+---
+// src/components/blocks/Hero.astro
+import type { THeroBlock } from "../../types/landing";
+import StrapiImage from "../StrapiImage.astro";
+
+type Props = THeroBlock;
+
+const { heading, text, links, image } = Astro.props;
+---
+
+<section class="border-b border-neutral-200 dark:border-gray-600">
+  <div class="max-w-6xl mx-auto px-6 py-20 md:py-28 grid md:grid-cols-2 gap-16 items-center">
+    <div>
+      <h1 class="text-4xl md:text-5xl font-medium leading-tight text-neutral-900 dark:text-white mb-6">
+        {heading}
+      </h1>
+      <p class="text-lg text-neutral-600 dark:text-gray-300 max-w-xl mb-8 leading-relaxed">{text}</p>
+      <div class="flex flex-wrap gap-4">
+        {
+          links?.map((link) => (
+            <a
+              href={link.href}
+              target={link.isExternal ? "_blank" : "_self"}
+              rel={link.isExternal ? "noopener noreferrer" : undefined}
+              class={
+                link.type === "PRIMARY"
+                  ? "inline-flex items-center px-5 py-2.5 bg-neutral-900 hover:bg-neutral-700 dark:bg-white dark:text-neutral-900 dark:hover:bg-gray-200 text-white text-sm rounded transition"
+                  : "inline-flex items-center px-5 py-2.5 border border-neutral-300 dark:border-gray-500 hover:border-neutral-400 text-neutral-800 dark:text-gray-200 text-sm rounded transition"
+              }
+            >
+              {link.label}
+            </a>
+          ))
+        }
+      </div>
+    </div>
+
+    {
+      image?.url && (
+        <div class="rounded-lg overflow-hidden">
+          <StrapiImage
+            src={image.url}
+            alt={image.alternativeText || heading}
+            width={640}
+            height={480}
+            loading="eager"
+            class="w-full h-auto object-cover"
+          />
+        </div>
+      )
+    }
+  </div>
+</section>
