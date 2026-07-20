@@ -7,7 +7,7 @@
     "displayName": "Global"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -31,6 +31,18 @@
       "type": "component",
       "component": "layout.footer",
       "repeatable": false
+    },
+    "contactAddress": {
+      "type": "string"
+    },
+    "contactPhone": {
+      "type": "string"
+    },
+    "mapLatitude": {
+      "type": "decimal"
+    },
+    "mapLongitude": {
+      "type": "decimal"
     }
   }
 }

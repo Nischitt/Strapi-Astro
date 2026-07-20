@@ -357,6 +357,34 @@ export async function getUserReviewForInstructor(
   return data?.data?.[0] ?? null;
 }
 
+/**
+ * Fetches the admin-editable contact address, phone, and map
+ * coordinates from the Global single type. A separate lightweight
+ * query (just these 4 fields) rather than reusing the full global-data
+ * fetch in Layout.astro, since that one is cached for header/footer/
+ * banner and this is only needed on the contact page.
+ */
+export async function getContactInfo(): Promise<{
+  contactAddress: string | null;
+  contactPhone: string | null;
+  mapLatitude: number | null;
+  mapLongitude: number | null;
+} | null> {
+  const query = qs.stringify(
+    { fields: ["contactAddress", "contactPhone", "mapLatitude", "mapLongitude"] },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/global?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href);
+  if (!response.ok) return null;
+
+  const json = await response.json();
+  return json?.data ?? null;
+}
+
 export async function getCourseBySlug(
   slug: string
 ): Promise<TStrapiCollectionResponse<TCourse>> {
