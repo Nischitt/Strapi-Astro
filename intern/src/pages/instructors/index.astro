@@ -1,4 +1,4 @@
----
+﻿---
 // src/pages/instructors/index.astro
 import Layout from "../../layouts/Layout.astro";
 import StrapiImage from "../../components/StrapiImage.astro";
@@ -38,6 +38,7 @@ const instructors = response?.data ?? [];
                       alt={instructor.photo.alternativeText || instructor.name}
                       width={400}
                       height={300}
+                      aspectRatio="4:3"
                       class="w-full h-full object-cover"
                     />
                   ) : (
@@ -60,7 +61,9 @@ const instructors = response?.data ?? [];
                       Specializes in {instructor.vehicleSpecialization}
                     </p>
                   )}
-                  <a
+                  
+                    <a
+                  
                     href={`/instructors/${instructor.slug}`}
                     class="inline-block text-sm font-bold text-[#FF9F1C] hover:underline"
                   >

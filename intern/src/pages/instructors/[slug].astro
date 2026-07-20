@@ -1,4 +1,4 @@
----
+﻿---
 // src/pages/instructors/[slug].astro
 export const prerender = false;
 
@@ -76,7 +76,7 @@ function initials(name: string) {
                   width={400}
                   height={500}
                   loading="eager"
-                  class="w-full h-full object-cover"
+                  class="!w-full !h-full !object-cover"
                 />
               ) : (
                 <div class="w-full h-full flex items-center justify-center text-6xl font-bold text-gray-300 dark:text-gray-600">
@@ -96,9 +96,9 @@ function initials(name: string) {
           }
 
           {
-            courses.length > 0 && (
-              <a
-                href={`/courses/${courses[0].slug}/book`}
+          courses.length > 0 && (
+              
+                <a                href={`/courses/${courses[0].slug}/book`}
                 class="block text-center py-3.5 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold uppercase tracking-wide text-sm rounded-lg shadow-md hover:shadow-lg transition-all"
               >
                 Book a Lesson
@@ -177,8 +177,8 @@ function initials(name: string) {
             </h2>
             <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => (
-                <a
-                  href={`/courses/${course.slug}`}
+                
+                  <a href={`/courses/${course.slug}`}
                   class="group block bg-white dark:bg-gray-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
                 >
                   <div class="relative overflow-hidden aspect-[4/3]">
@@ -188,7 +188,8 @@ function initials(name: string) {
                         alt={course.featuredImage.alternativeText || course.title}
                         width={400}
                         height={300}
-                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        aspectRatio="4:3"
+                        class="!w-full !h-full !object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
                       <div class="w-full h-full bg-gradient-to-br from-[#111827] to-[#374151]" />
@@ -226,7 +227,7 @@ function initials(name: string) {
         {
           reviews.length === 0 && (
             <p id="reviews-empty-state" class="text-[#374151] dark:text-gray-400 mb-8">
-              No reviews yet — be the first to share your experience with {instructor.name}.
+              No reviews yet â€” be the first to share your experience with {instructor.name}.
             </p>
           )
         }
@@ -552,3 +553,5 @@ function initials(name: string) {
   document.addEventListener("astro:after-swap", setupFormToggles);
   document.addEventListener("astro:after-swap", setupReviewsToggle);
 </script>
+
+
