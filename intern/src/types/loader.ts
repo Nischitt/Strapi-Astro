@@ -1,4 +1,4 @@
-// src/types/loader.ts
+﻿// src/types/loader.ts
 import qs from "qs";
 import type {
   TLandingPage,
@@ -12,7 +12,7 @@ import type { TCourse } from "./course";
 const BASE_API_URL =
   import.meta.env.VITE_STRAPI_BASE_URL ?? "http://localhost:1337";
 
-// Every image field only ever needs these — restricting to just them
+// Every image field only ever needs these â€” restricting to just them
 // drops Strapi's "formats" object (thumbnail/small/medium/large variants,
 // each with their own url/width/height/size) which is otherwise the
 // single biggest chunk of dead weight in most responses. Keeping "mime"
@@ -50,7 +50,7 @@ const BLOCKS_POPULATE = {
         populate: {
           featuredImage: IMAGE_FIELDS,
           // Only fullName is ever rendered for the author on article
-          // cards — bio and author.image aren't shown here, so we skip
+          // cards â€” bio and author.image aren't shown here, so we skip
           // both entirely rather than pulling a full nested media object.
           author: { fields: ["fullName"] },
         },
@@ -67,9 +67,7 @@ const BLOCKS_POPULATE = {
  * relations/media inside those blocks (image, links, cards, faq,
  * articles.author, etc.) will come back empty.
  */
-export async function getLandingPage(): Promise<
-  TStrapiSingleResponse<TLandingPage>
-> {
+export async function getLandingPage(): Promise<TStrapiSingleResponse<TLandingPage>> {
   const query = qs.stringify(
     { populate: { blocks: { on: BLOCKS_POPULATE } } },
     { encodeValuesOnly: true }
@@ -78,11 +76,11 @@ export async function getLandingPage(): Promise<
   const path = `/api/landing-page?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
-/** Fetches a single Page (collection type) by its slug — e.g. About. */
+/** Fetches a single Page (collection type) by its slug â€” e.g. About. */
 export async function getPageBySlug(
   slug: string
 ): Promise<TStrapiCollectionResponse<TPage>> {
@@ -97,14 +95,14 @@ export async function getPageBySlug(
   const path = `/api/pages?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
 const ARTICLE_POPULATE = {
   featuredImage: IMAGE_FIELDS,
   // Only tag.title is ever rendered (as a small badge on cards/detail
-  // pages) — description is fetched but never shown, so we drop it.
+  // pages) â€” description is fetched but never shown, so we drop it.
   contentTags: { fields: ["title"] },
   // Same reasoning as featured-articles above: only fullName is shown,
   // author.bio and author.image aren't rendered on article cards or
@@ -113,12 +111,9 @@ const ARTICLE_POPULATE = {
 };
 
 /** Fetches all published articles, most recent first. */
-export async function getArticles(): Promise<
-  TStrapiCollectionResponse<TArticle>
-> {
+export async function getArticles(): Promise<TStrapiCollectionResponse<TArticle>> {
   const query = qs.stringify(
     {
-      fields: ["title", "description", "slug", "publishedAt"],
       populate: ARTICLE_POPULATE,
       sort: ["publishedAt:desc"],
     },
@@ -128,14 +123,13 @@ export async function getArticles(): Promise<
   const path = `/api/articles?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
-
 /**
  * Fetches a single article by its slug. Unlike the listing above, this
  * one needs the full `content` field too since it's the article detail
- * page — so no top-level `fields` restriction here, only the nested
+ * page â€” so no top-level `fields` restriction here, only the nested
  * media/relation trimming.
  */
 export async function getArticleBySlug(
@@ -152,14 +146,12 @@ export async function getArticleBySlug(
   const path = `/api/articles?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
 /** Fetches all categories, in admin-defined order, for the course filter menu. */
-export async function getCategories(): Promise<
-  TStrapiCollectionResponse<import("./category").TCategory>
-> {
+export async function getCategories(): Promise<TStrapiCollectionResponse<import("./category").TCategory>> {
   const query = qs.stringify(
     { sort: ["order:asc", "name:asc"] },
     { encodeValuesOnly: true }
@@ -168,7 +160,7 @@ export async function getCategories(): Promise<
   const path = `/api/categories?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
@@ -188,14 +180,14 @@ export async function getCourses(
   const path = `/api/courses?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
 /**
  * Fetches published reviews for a single course, most recent first.
  * Reviews start as drafts (draftAndPublish is on for this content type)
- * so this — the public find endpoint — only ever returns ones an admin
+ * so this â€” the public find endpoint â€” only ever returns ones an admin
  * has explicitly published, giving you moderation for free with no
  * custom controller code.
  */
@@ -214,16 +206,16 @@ export async function getReviewsForCourse(
   const path = `/api/reviews?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 /**
- * Fetches the current user's own review for a course, if one exists —
+ * Fetches the current user's own review for a course, if one exists â€”
  * used to show "edit your review" instead of "write a review" and to
  * block duplicate submissions. Uses the trusted server API token
  * (not the public endpoint) because filtering/reading by a specific
  * user id runs into the same relation-visibility restriction that
- * blocked setting the `user` field directly — the Public/Authenticated
+ * blocked setting the `user` field directly â€” the Public/Authenticated
  * roles aren't meant to have broad read access into the User model,
  * so this needs the same elevated, server-only credential the create
  * flow already uses.
@@ -251,6 +243,7 @@ export async function getUserReviewForCourse(
 
   const response = await fetch(url.href, {
     headers: { Authorization: `Bearer ${apiToken}` },
+    cache: "no-store",
   });
   if (!response.ok) return null;
 
@@ -259,9 +252,7 @@ export async function getUserReviewForCourse(
 }
 
 /** Fetches all published instructors, alphabetical by name. */
-export async function getInstructors(): Promise<
-  TStrapiCollectionResponse<import("./instructor").TInstructor>
-> {
+export async function getInstructors(): Promise<TStrapiCollectionResponse<import("./instructor").TInstructor>> {
   const query = qs.stringify(
     {
       populate: { photo: IMAGE_FIELDS },
@@ -273,7 +264,7 @@ export async function getInstructors(): Promise<
   const path = `/api/instructors?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
@@ -298,7 +289,7 @@ export async function getInstructorBySlug(
   const path = `/api/instructors?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
@@ -318,13 +309,13 @@ export async function getReviewsForInstructor(
   const path = `/api/reviews?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
 
 /**
  * Fetches the current user's own review for an instructor, if one
- * exists. Same trusted-API-token approach as getUserReviewForCourse —
+ * exists. Same trusted-API-token approach as getUserReviewForCourse â€”
  * see that function's comment for why the public endpoint can't do this.
  */
 export async function getUserReviewForInstructor(
@@ -350,6 +341,7 @@ export async function getUserReviewForInstructor(
 
   const response = await fetch(url.href, {
     headers: { Authorization: `Bearer ${apiToken}` },
+    cache: "no-store",
   });
   if (!response.ok) return null;
 
@@ -378,7 +370,7 @@ export async function getContactInfo(): Promise<{
   const path = `/api/global?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   if (!response.ok) return null;
 
   const json = await response.json();
@@ -399,6 +391,9 @@ export async function getCourseBySlug(
   const path = `/api/courses?${query}`;
   const url = new URL(path, BASE_API_URL);
 
-  const response = await fetch(url.href);
+  const response = await fetch(url.href, { cache: "no-store" });
   return response.json();
 }
+
+
+
