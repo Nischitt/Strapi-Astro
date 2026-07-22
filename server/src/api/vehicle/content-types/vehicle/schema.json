@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vehicles",
+  "info": {
+    "singularName": "vehicle",
+    "pluralName": "vehicles",
+    "displayName": "Vehicle"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "vehicleName": {
+      "type": "string",
+      "required": true
+    },
+    "transmission": {
+      "type": "enumeration",
+      "enum": [
+        "Manual",
+        "Automatic"
+      ],
+      "required": true
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "Active",
+        "Maintenance",
+        "Retired"
+      ],
+      "default": "Active"
+    },
+    "registrationNumber": {
+      "type": "string"
+    },
+    "instructor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::instructor.instructor",
+      "inversedBy": "vehicles"
+    }
+  }
+}

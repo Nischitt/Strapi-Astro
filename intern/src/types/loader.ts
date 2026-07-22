@@ -395,5 +395,132 @@ export async function getCourseBySlug(
   return response.json();
 }
 
+export async function getAvailableSlotsForCourse(
+  courseSlug: string
+): Promise<TStrapiCollectionResponse<any>> {
+  const query = qs.stringify(
+    {
+      filters: { course: { slug: { $eq: courseSlug } } },
+      sort: ["date:asc", "startTime:asc"],
+    },
+    { encodeValuesOnly: true }
+  );
+
+  const path = `/api/available-slots?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href, { cache: "no-store" });
+  return response.json();
+}
+
+/** Fetches all holidays (used to disable dates in the calendar). */
+export async function getHolidays(): Promise<TStrapiCollectionResponse<any>> {
+  const query = qs.stringify({}, { encodeValuesOnly: true });
+  const path = `/api/holidays?${query}`;
+  const url = new URL(path, BASE_API_URL);
+
+  const response = await fetch(url.href, { cache: "no-store" });
+  return response.json();
+}
+
+/** Creates a booking. Uses the trusted server API token since Booking
+ * writes need elevated access (same pattern as review creation). */
+export async function createBooking(payload: {
+  course: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  phone: string;
+  selectedDate: string;
+  selectedTime: string;
+  availableSlot?: string;
+  drivingLicenseStatus: string;
+  preferredVehicle: string;
+  pickupRequired: boolean;
+  pickupAddress?: string;
+  notes?: string;
+}): Promise<{ ok: boolean; error?: string; data?: any }> {
+  const apiToken = import.meta.env.STRAPI_API_TOKEN;
+  const url = new URL("/api/bookings", BASE_API_URL);
+
+  const response = await fetch(url.href, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiToken ? { Authorization: `Bearer ${apiToken}` } : {}),
+    },
+    body: JSON.stringify({ data: { ...payload, bookingStatus: "Pending" } }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    return { ok: false, error: err?.error?.message || "Booking failed." };
+  }
+
+  const data = await response.json();
+  return { ok: true, data: data?.data };
+}
 
 
+/** Fetches the single Booking Settings record. */
+export async function getBookingSettings(): Promise<any | null> {
+  const url = new URL("/api/booking-setting", BASE_API_URL);
+  const response = await fetch(url.href, { cache: "no-store" });
+  if (!response.ok) return null;
+  const data = await response.json();
+  return data?.data ?? null;
+}
+
+/** Checks whether a specific date is a holiday. */
+export async function isDateHoliday(dateStr: string): Promise<boolean> {
+  const query = qs.stringify(
+    { filters: { date: { $eq: dateStr } } },
+    { encodeValuesOnly: true }
+  );
+  const url = new URL(`/api/holidays?${query}`, BASE_API_URL);
+  const response = await fetch(url.href, { cache: "no-store" });
+  if (!response.ok) return false;
+  const data = await response.json();
+  return (data?.data?.length ?? 0) > 0;
+}
+
+/** Counts existing bookings for a course on a given date, excluding
+ * cancelled ones — used to enforce maximumBookingsPerDay. */
+export async function countBookingsForCourseOnDate(
+  courseDocumentId: string,
+  dateStr: string
+): Promise<number> {
+  const query = qs.stringify(
+    {
+      filters: {
+        course: { documentId: { $eq: courseDocumentId } },
+        selectedDate: { $eq: dateStr },
+        bookingStatus: { $ne: "Cancelled" },
+      },
+      pagination: { pageSize: 1 },
+    },
+    { encodeValuesOnly: true }
+  );
+  const url = new URL(`/api/bookings?${query}`, BASE_API_URL);
+  const response = await fetch(url.href, { cache: "no-store" });
+  if (!response.ok) return 0;
+  const data = await response.json();
+  return data?.meta?.pagination?.total ?? 0;
+}
+
+export async function getBookingsForUser(email: string): Promise<any[]> {
+  const query = qs.stringify(
+    {
+      filters: { email: { $eqi: email } }, // case-insensitive match
+      populate: { course: { fields: ["title", "slug", "price"] } },
+      sort: ["createdAt:desc"],
+    },
+    { encodeValuesOnly: true }
+  );
+  const url = new URL(`/api/bookings?${query}`, BASE_API_URL);
+  const response = await fetch(url.href, { cache: "no-store" });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data?.data ?? [];
+}

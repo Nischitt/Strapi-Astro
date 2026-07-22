@@ -1,0 +1,117 @@
+---
+// src/pages/dashboard.astro
+import Layout from "../layouts/Layout.astro";
+import { getCurrentUser } from "../types/auth-server";
+import { getBookingsForUser } from "../types/loader";
+
+const user = await getCurrentUser(Astro.cookies);
+
+if (!user) {
+  return Astro.redirect("/login?redirect=/dashboard");
+}
+
+const bookings = await getBookingsForUser(user.email);
+
+const today = new Date().toISOString().split("T")[0];
+const upcomingCount = bookings.filter(
+  (b) => b.selectedDate >= today && b.bookingStatus !== "Cancelled"
+).length;
+const pendingCount = bookings.filter((b) => b.bookingStatus === "Pending").length;
+const confirmedCount = bookings.filter((b) => b.bookingStatus === "Confirmed").length;
+const totalSpent = bookings
+  .filter((b) => b.bookingStatus !== "Cancelled")
+  .reduce((sum, b) => sum + (Number(b.course?.price) || 0), 0);
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "—";
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+const statusStyles: Record<string, string> = {
+  Pending: "bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
+  Confirmed: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  Completed: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  Cancelled: "bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+};
+---
+
+<Layout>
+  <div class="bg-[#F9FAFB] dark:bg-gray-900 min-h-screen">
+    <div class="max-w-5xl mx-auto px-6 py-10">
+
+      <!-- User info -->
+      <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-[#111827] dark:text-white mb-1">
+            Welcome back, {user.username}
+          </h1>
+          <p class="text-sm text-[#374151] dark:text-gray-400">{user.email}</p>
+        </div>
+        <a href="/courses" class="px-5 py-2.5 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold rounded-lg transition">
+          Book a New Course
+        </a>
+      </div>
+
+      <!-- Stats cards -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p class="text-xs text-gray-400 mb-1">Upcoming Lessons</p>
+          <p class="text-2xl font-black text-[#111827] dark:text-white">{upcomingCount}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p class="text-xs text-gray-400 mb-1">Pending</p>
+          <p class="text-2xl font-black text-yellow-600 dark:text-yellow-400">{pendingCount}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p class="text-xs text-gray-400 mb-1">Confirmed</p>
+          <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400">{confirmedCount}</p>
+        </div>
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <p class="text-xs text-gray-400 mb-1">Total Spent</p>
+          <p class="text-2xl font-black text-[#111827] dark:text-white">Rs {totalSpent}</p>
+        </div>
+      </div>
+
+      <!-- Bookings list -->
+      <h2 class="text-lg font-bold text-[#111827] dark:text-white mb-4">Your Bookings</h2>
+
+      {
+        bookings.length === 0 ? (
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-10 text-center">
+            <p class="text-gray-500 dark:text-gray-400 mb-4">You haven't made any bookings yet.</p>
+            <a href="/courses" class="inline-block px-5 py-2.5 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold rounded-lg transition">
+              Browse Courses
+            </a>
+          </div>
+        ) : (
+          <div class="space-y-4">
+            {bookings.map((booking) => (
+              <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <p class="font-bold text-[#111827] dark:text-white mb-1">
+                    {booking.course?.title || "Course unavailable"}
+                  </p>
+                  <p class="text-sm text-[#374151] dark:text-gray-400">
+                    {formatDate(booking.selectedDate)}
+                    {booking.selectedTime && ` · ${booking.selectedTime.slice(0, 5)}`}
+                  </p>
+                  <p class="text-xs text-gray-400 mt-1">Booking #{booking.id}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <span class="text-sm font-bold text-[#111827] dark:text-white">
+                    Rs {booking.course?.price ?? "—"}
+                  </span>
+                  <span class={`text-xs font-bold px-3 py-1.5 rounded-full ${statusStyles[booking.bookingStatus] || "bg-gray-100 text-gray-600"}`}>
+                    {booking.bookingStatus}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </div>
+</Layout>

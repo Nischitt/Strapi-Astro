@@ -26,7 +26,7 @@
       "allowedTypes": ["images"]
     },
     "biography": {
-      "type": "richtext"
+      "type": "text"
     },
     "certifications": {
       "type": "text"
@@ -50,6 +50,31 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::review.review",
+      "mappedBy": "instructor"
+    },
+    "workingDays": {
+      "type": "text"
+    },
+    "workingHoursStart": {
+      "type": "time"
+    },
+    "workingHoursEnd": {
+      "type": "time"
+    },
+    "available": {
+      "type": "boolean",
+      "default": true
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::booking.booking",
+      "mappedBy": "instructor"
+    },
+    "vehicles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::vehicle.vehicle",
       "mappedBy": "instructor"
     }
   }

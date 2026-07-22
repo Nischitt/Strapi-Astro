@@ -78,6 +78,50 @@
       "relation": "manyToOne",
       "target": "api::instructor.instructor",
       "inversedBy": "courses"
+    },
+    "discountPrice": {
+      "type": "decimal"
+    },
+    "totalLessons": {
+      "type": "integer"
+    },
+    "gallery": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": [
+        "images"
+      ]
+    },
+    "vehicleType": {
+      "type": "enumeration",
+      "enum": [
+        "Manual",
+        "Automatic",
+        "Both"
+      ]
+    },
+    "maximumStudents": {
+      "type": "integer"
+    },
+    "bookingEnabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "seoTitle": {
+      "type": "string"
+    },
+    "seoDescription": {
+      "type": "text"
+    },
+    "availableSlots": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::available-slot.available-slot",
+      "mappedBy": "course"
     }
   }
 }

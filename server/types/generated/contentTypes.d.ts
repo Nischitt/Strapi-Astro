@@ -509,6 +509,94 @@ export interface ApiAuthorAuthor extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiAvailableSlotAvailableSlot
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'available_slots';
+  info: {
+    displayName: 'Available Slot';
+    pluralName: 'available-slots';
+    singularName: 'available-slot';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    bookings: Schema.Attribute.Relation<'oneToMany', 'api::booking.booking'>;
+    course: Schema.Attribute.Relation<'manyToOne', 'api::course.course'>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    endTime: Schema.Attribute.Time & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::available-slot.available-slot'
+    > &
+      Schema.Attribute.Private;
+    maximumCapacity: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
+    publishedAt: Schema.Attribute.DateTime;
+    remainingSeats: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>;
+    slotStatus: Schema.Attribute.Enumeration<
+      ['Available', 'Full', 'Holiday', 'Blocked']
+    > &
+      Schema.Attribute.DefaultTo<'Available'>;
+    startTime: Schema.Attribute.Time & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiBookingSettingBookingSetting
+  extends Struct.SingleTypeSchema {
+  collectionName: 'booking_settings';
+  info: {
+    displayName: 'Booking Settings';
+    pluralName: 'booking-settings';
+    singularName: 'booking-setting';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    advanceBookingLimitDays: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<30>;
+    bookingCutoffTime: Schema.Attribute.Time;
+    cancellationAllowed: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::booking-setting.booking-setting'
+    > &
+      Schema.Attribute.Private;
+    maximumBookingsPerDay: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<10>;
+    minimumNoticeHours: Schema.Attribute.Integer &
+      Schema.Attribute.DefaultTo<24>;
+    publishedAt: Schema.Attribute.DateTime;
+    reschedulingAllowed: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    sendBookingConfirmationEmail: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    sendBookingReminderEmail: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<true>;
+    slotDuration: Schema.Attribute.Enumeration<
+      ['min15', 'min30', 'min45', 'min60']
+    > &
+      Schema.Attribute.DefaultTo<'min30'>;
+    timezone: Schema.Attribute.String &
+      Schema.Attribute.DefaultTo<'Asia/Kathmandu'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
   collectionName: 'bookings';
   info: {
@@ -520,14 +608,29 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    bookingStatus: Schema.Attribute.Enumeration<
-      ['Pending', 'Confirmed', 'Cancelled']
+    adminNotes: Schema.Attribute.Text;
+    availableSlot: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::available-slot.available-slot'
     >;
+    bookingStatus: Schema.Attribute.Enumeration<
+      ['Pending', 'Confirmed', 'Completed', 'Cancelled']
+    > &
+      Schema.Attribute.DefaultTo<'Pending'>;
     course: Schema.Attribute.Relation<'manyToOne', 'api::course.course'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    drivingLicenseStatus: Schema.Attribute.Enumeration<
+      ['Beginner', 'Learner Permit', 'Renewal']
+    >;
     email: Schema.Attribute.Email & Schema.Attribute.Required;
+    firstName: Schema.Attribute.String;
+    instructor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::instructor.instructor'
+    >;
+    lastName: Schema.Attribute.String;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -536,8 +639,19 @@ export interface ApiBookingBooking extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     name: Schema.Attribute.String;
     notes: Schema.Attribute.String;
+    paymentMethod: Schema.Attribute.String;
+    paymentStatus: Schema.Attribute.Enumeration<
+      ['Unpaid', 'Paid', 'Refunded']
+    > &
+      Schema.Attribute.DefaultTo<'Unpaid'>;
     phone: Schema.Attribute.String & Schema.Attribute.Required;
+    pickupAddress: Schema.Attribute.String;
+    pickupRequired: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>;
+    preferredVehicle: Schema.Attribute.Enumeration<['Manual', 'Automatic']>;
     publishedAt: Schema.Attribute.DateTime;
+    selectedDate: Schema.Attribute.Date;
+    selectedTime: Schema.Attribute.Time;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -618,6 +732,11 @@ export interface ApiCourseCourse extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
+    availableSlots: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::available-slot.available-slot'
+    >;
+    bookingEnabled: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     bookings: Schema.Attribute.Relation<'oneToMany', 'api::booking.booking'>;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
     content: Schema.Attribute.RichText;
@@ -625,8 +744,11 @@ export interface ApiCourseCourse extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    discountPrice: Schema.Attribute.Decimal;
     duration: Schema.Attribute.String;
+    featured: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
     featuredImage: Schema.Attribute.Media<'images'>;
+    gallery: Schema.Attribute.Media<'images', true>;
     instructor: Schema.Attribute.Relation<
       'manyToOne',
       'api::instructor.instructor'
@@ -641,16 +763,21 @@ export interface ApiCourseCourse extends Struct.CollectionTypeSchema {
       'api::course.course'
     > &
       Schema.Attribute.Private;
+    maximumStudents: Schema.Attribute.Integer;
     practicalLessons: Schema.Attribute.Integer;
     price: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
     reviews: Schema.Attribute.Relation<'oneToMany', 'api::review.review'>;
+    seoDescription: Schema.Attribute.Text;
+    seoTitle: Schema.Attribute.String;
     slug: Schema.Attribute.UID<'title'>;
     theoryLessons: Schema.Attribute.Integer;
     title: Schema.Attribute.String;
+    totalLessons: Schema.Attribute.Integer;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    vehicleType: Schema.Attribute.Enumeration<['Manual', 'Automatic', 'Both']>;
   };
 }
 
@@ -690,6 +817,37 @@ export interface ApiGlobalGlobal extends Struct.SingleTypeSchema {
   };
 }
 
+export interface ApiHolidayHoliday extends Struct.CollectionTypeSchema {
+  collectionName: 'holidays';
+  info: {
+    displayName: 'Holiday';
+    pluralName: 'holidays';
+    singularName: 'holiday';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    date: Schema.Attribute.Date & Schema.Attribute.Required;
+    description: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::holiday.holiday'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    recurring: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiInstructorInstructor extends Struct.CollectionTypeSchema {
   collectionName: 'instructors';
   info: {
@@ -701,7 +859,9 @@ export interface ApiInstructorInstructor extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    biography: Schema.Attribute.RichText;
+    available: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
+    biography: Schema.Attribute.Text;
+    bookings: Schema.Attribute.Relation<'oneToMany', 'api::booking.booking'>;
     certifications: Schema.Attribute.Text;
     courses: Schema.Attribute.Relation<'oneToMany', 'api::course.course'>;
     createdAt: Schema.Attribute.DateTime;
@@ -722,7 +882,11 @@ export interface ApiInstructorInstructor extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    vehicles: Schema.Attribute.Relation<'oneToMany', 'api::vehicle.vehicle'>;
     vehicleSpecialization: Schema.Attribute.String;
+    workingDays: Schema.Attribute.Text;
+    workingHoursEnd: Schema.Attribute.Time;
+    workingHoursStart: Schema.Attribute.Time;
     yearsOfExperience: Schema.Attribute.Integer;
   };
 }
@@ -883,6 +1047,44 @@ export interface ApiTagTag extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVehicleVehicle extends Struct.CollectionTypeSchema {
+  collectionName: 'vehicles';
+  info: {
+    displayName: 'Vehicle';
+    pluralName: 'vehicles';
+    singularName: 'vehicle';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    image: Schema.Attribute.Media<'images'>;
+    instructor: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::instructor.instructor'
+    >;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vehicle.vehicle'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    registrationNumber: Schema.Attribute.String;
+    status: Schema.Attribute.Enumeration<['Active', 'Maintenance', 'Retired']> &
+      Schema.Attribute.DefaultTo<'Active'>;
+    transmission: Schema.Attribute.Enumeration<['Manual', 'Automatic']> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vehicleName: Schema.Attribute.String & Schema.Attribute.Required;
   };
 }
 
@@ -1399,16 +1601,20 @@ declare module '@strapi/strapi' {
       'admin::user': AdminUser;
       'api::article.article': ApiArticleArticle;
       'api::author.author': ApiAuthorAuthor;
+      'api::available-slot.available-slot': ApiAvailableSlotAvailableSlot;
+      'api::booking-setting.booking-setting': ApiBookingSettingBookingSetting;
       'api::booking.booking': ApiBookingBooking;
       'api::category.category': ApiCategoryCategory;
       'api::contact-message.contact-message': ApiContactMessageContactMessage;
       'api::course.course': ApiCourseCourse;
       'api::global.global': ApiGlobalGlobal;
+      'api::holiday.holiday': ApiHolidayHoliday;
       'api::instructor.instructor': ApiInstructorInstructor;
       'api::landing-page.landing-page': ApiLandingPageLandingPage;
       'api::page.page': ApiPagePage;
       'api::review.review': ApiReviewReview;
       'api::tag.tag': ApiTagTag;
+      'api::vehicle.vehicle': ApiVehicleVehicle;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

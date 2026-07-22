@@ -1,0 +1,57 @@
+{
+  "kind": "collectionType",
+  "collectionName": "available_slots",
+  "info": {
+    "singularName": "available-slot",
+    "pluralName": "available-slots",
+    "displayName": "Available Slot"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "course": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::course.course",
+      "inversedBy": "availableSlots"
+    },
+    "date": {
+      "type": "date",
+      "required": true
+    },
+    "startTime": {
+      "type": "time",
+      "required": true
+    },
+    "endTime": {
+      "type": "time",
+      "required": true
+    },
+    "maximumCapacity": {
+      "type": "integer",
+      "default": 1
+    },
+    "remainingSeats": {
+      "type": "integer",
+      "default": 1
+    },
+    "slotStatus": {
+      "type": "enumeration",
+      "enum": [
+        "Available",
+        "Full",
+        "Holiday",
+        "Blocked"
+      ],
+      "default": "Available"
+    },
+    "bookings": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::booking.booking",
+      "mappedBy": "availableSlot"
+    }
+  }
+}

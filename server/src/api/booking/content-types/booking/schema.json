@@ -36,8 +36,69 @@
       "enum": [
         "Pending",
         "Confirmed",
+        "Completed",
         "Cancelled"
+      ],
+      "default": "Pending"
+    },
+    "selectedDate": {
+      "type": "date"
+    },
+    "selectedTime": {
+      "type": "time"
+    },
+    "firstName": {
+      "type": "string"
+    },
+    "lastName": {
+      "type": "string"
+    },
+    "drivingLicenseStatus": {
+      "type": "enumeration",
+      "enum": [
+        "Beginner",
+        "Learner Permit",
+        "Renewal"
       ]
+    },
+    "preferredVehicle": {
+      "type": "enumeration",
+      "enum": [
+        "Manual",
+        "Automatic"
+      ]
+    },
+    "pickupRequired": {
+      "type": "boolean",
+      "default": false
+    },
+    "pickupAddress": {
+      "type": "string"
+    },
+    "paymentStatus": {
+      "type": "enumeration",
+      "enum": [
+        "Unpaid",
+        "Paid",
+        "Refunded"
+      ],
+      "default": "Unpaid"
+    },
+    "paymentMethod": {
+      "type": "string"
+    },
+    "adminNotes": {
+      "type": "text"
+    },
+    "instructor": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::instructor.instructor"
+    },
+    "availableSlot": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::available-slot.available-slot"
     }
   }
 }

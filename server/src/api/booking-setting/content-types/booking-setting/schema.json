@@ -1,0 +1,60 @@
+{
+  "kind": "singleType",
+  "collectionName": "booking_settings",
+  "info": {
+    "singularName": "booking-setting",
+    "pluralName": "booking-settings",
+    "displayName": "Booking Settings"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "slotDuration": {
+      "type": "enumeration",
+      "enum": [
+        "min15",
+        "min30",
+        "min45",
+        "min60"
+      ],
+      "default": "min30"
+    },
+    "maximumBookingsPerDay": {
+      "type": "integer",
+      "default": 10
+    },
+    "advanceBookingLimitDays": {
+      "type": "integer",
+      "default": 30
+    },
+    "bookingCutoffTime": {
+      "type": "time"
+    },
+    "minimumNoticeHours": {
+      "type": "integer",
+      "default": 24
+    },
+    "timezone": {
+      "type": "string",
+      "default": "Asia/Kathmandu"
+    },
+    "sendBookingConfirmationEmail": {
+      "type": "boolean",
+      "default": true
+    },
+    "sendBookingReminderEmail": {
+      "type": "boolean",
+      "default": true
+    },
+    "cancellationAllowed": {
+      "type": "boolean",
+      "default": true
+    },
+    "reschedulingAllowed": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

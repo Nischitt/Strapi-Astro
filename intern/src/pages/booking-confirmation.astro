@@ -1,0 +1,76 @@
+---
+// src/pages/booking-confirmation.astro
+import Layout from "../layouts/Layout.astro";
+
+const params = Astro.url.searchParams;
+const id = params.get("id");
+const course = params.get("course");
+const date = params.get("date");
+const time = params.get("time");
+const price = params.get("price");
+const name = params.get("name");
+
+if (!id) {
+  return Astro.redirect("/");
+}
+
+function formatDate(dateStr: string | null) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const d = new Date(year, month - 1, day);
+  return d.toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  });
+}
+---
+
+<Layout>
+  <div class="bg-[#F9FAFB] dark:bg-gray-900 min-h-screen flex items-center justify-center px-6 py-16">
+    <div class="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8 text-center">
+      <div class="w-16 h-16 mx-auto mb-5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+        <svg class="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <h1 class="text-2xl font-bold text-[#111827] dark:text-white mb-2">Booking Confirmed!</h1>
+      <p class="text-sm text-[#374151] dark:text-gray-400 mb-6">
+        Thanks, {name}. We've received your booking and it's pending confirmation from our team.
+      </p>
+
+      <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-5 text-left space-y-3 mb-6">
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Booking ID</span>
+          <span class="font-bold text-[#111827] dark:text-white">#{id}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Course</span>
+          <span class="font-bold text-[#111827] dark:text-white">{course}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Date</span>
+          <span class="font-bold text-[#111827] dark:text-white">{formatDate(date)}</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Time</span>
+          <span class="font-bold text-[#111827] dark:text-white">{time?.slice(0, 5)}</span>
+        </div>
+        <div class="flex justify-between text-sm pt-3 border-t border-dashed border-gray-200 dark:border-gray-600">
+          <span class="text-gray-500 dark:text-gray-400">Amount Due</span>
+          <span class="font-extrabold text-[#111827] dark:text-white">Rs {price}</span>
+        </div>
+      </div>
+
+      <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-4 mb-6 text-left">
+        <p class="text-sm font-bold text-orange-700 dark:text-orange-300 mb-1">💵 Cash Payment Only</p>
+        <p class="text-xs text-orange-600 dark:text-orange-400">
+          Please bring the exact amount in cash to your first lesson. Your instructor will confirm receipt.
+        </p>
+      </div>
+
+      <a href="/dashboard" class="inline-block w-full py-3 bg-[#FF9F1C] hover:bg-[#e8901a] text-white font-bold rounded-xl transition">
+        Go to Dashboard
+      </a>
+    </div>
+  </div>
+</Layout>

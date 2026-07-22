@@ -1,156 +1,317 @@
 ---
-// src/pages/courses/[slug]/book.astro
-export const prerender = false;
-
 import Layout from "../../../layouts/Layout.astro";
-import { getCourseBySlug } from "../../../types/loader";
+import { getCourseBySlug, getAvailableSlotsForCourse, getHolidays } from "../../../types/loader";
 import { getCurrentUser } from "../../../types/auth-server";
 
 const { slug } = Astro.params;
-
+const courseResponse = await getCourseBySlug(slug as string);
+const course = courseResponse?.data?.[0];
 const user = await getCurrentUser(Astro.cookies);
+
 if (!user) {
   return Astro.redirect(`/login?redirect=/courses/${slug}/book`);
 }
 
-const response = await getCourseBySlug(slug as string);
-const course = response?.data?.[0];
-
 if (!course) {
   return Astro.redirect("/404");
 }
+
+const [slotsResponse, holidaysResponse] = await Promise.all([
+  getAvailableSlotsForCourse(course.slug),
+  getHolidays(),
+]);
+
+const slots = slotsResponse?.data ?? [];
+const holidays = holidaysResponse?.data ?? [];
 ---
-
 <Layout>
-  <section class="max-w-xl mx-auto px-6 py-20">
-    <nav class="text-sm text-gray-500 flex items-center gap-2 mb-8" aria-label="Breadcrumb">
-      <a href="/" class="hover:text-[#1F6F50] transition">Home</a>
-      <span>/</span>
-      <a href="/courses" class="hover:text-[#1F6F50] transition">Courses</a>
-      <span>/</span>
-      <a href={`/courses/${course.slug}`} class="hover:text-[#1F6F50] transition">
-        {course.title}
-      </a>
-      <span>/</span>
-      <span class="text-[#14171A] font-medium">Book</span>
-    </nav>
+  <div class="bg-[#F9FAFB] dark:bg-gray-900 min-h-screen">
+    <div class="max-w-5xl mx-auto px-6 py-10">
+      <h1 class="text-2xl font-bold text-[#111827] dark:text-white mb-1">
+        Book: {course.title}
+      </h1>
+      <p class="text-sm text-[#374151] dark:text-gray-400 mb-8">
+        Rs {course.price} · {course.duration}
+      </p>
 
-    <h1 class="font-display text-3xl font-bold uppercase text-[#14171A] dark:text-white mb-2">
-      Book {course.title}
-    </h1>
-    <p class="text-gray-500 dark:text-gray-400 mb-8">
-      Rs {course.price}.00 — {course.duration}
-    </p>
+      <div class="grid md:grid-cols-3 gap-6" id="booking-steps">
+        <!-- STEP 1: Calendar -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h2 class="font-bold text-[#111827] dark:text-white mb-4">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF9F1C] text-white text-xs mr-2">1</span>
+            Select a Day
+          </h2>
+          <div id="calendar-header" class="flex items-center justify-between mb-3">
+            <button id="cal-prev" type="button" class="px-2 py-1 text-gray-400 hover:text-gray-600">&lsaquo;</button>
+            <span id="cal-month-label" class="font-bold text-sm text-[#111827] dark:text-white"></span>
+            <button id="cal-next" type="button" class="px-2 py-1 text-gray-400 hover:text-gray-600">&rsaquo;</button>
+          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+        </div>
 
-    <form id="booking-form" class="space-y-4">
-      <div>
-        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Name
-        </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          required
-          readonly
-          value={user.username}
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed"
-        />
+        <!-- STEP 2: Time slots -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h2 class="font-bold text-[#111827] dark:text-white mb-4">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF9F1C] text-white text-xs mr-2">2</span>
+            Choose a Time
+          </h2>
+          <div id="time-slots" class="space-y-2 max-h-96 overflow-y-auto">
+            <p class="text-sm text-gray-400">Select a day first.</p>
+          </div>
+        </div>
+
+        <!-- STEP 3: Form -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-5">
+          <h2 class="font-bold text-[#111827] dark:text-white mb-4">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF9F1C] text-white text-xs mr-2">3</span>
+            Confirm Booking
+          </h2>
+
+          <div id="selection-summary" class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4 mb-4 text-center hidden">
+            <p class="text-xs text-gray-400 mb-1">You've selected:</p>
+            <p id="summary-time" class="text-lg font-bold text-[#111827] dark:text-white"></p>
+            <p id="summary-date" class="text-sm text-gray-500"></p>
+          </div>
+
+          <form id="booking-form" class="space-y-3">
+            <input type="hidden" id="selected-date" name="selectedDate" />
+            <input type="hidden" id="selected-time" name="selectedTime" />
+            <input type="hidden" id="selected-slot-id" name="availableSlot" />
+
+            <div class="grid grid-cols-2 gap-2">
+              <input required name="firstName" placeholder="First name" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm" />
+              <input required name="lastName" placeholder="Last name" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm" />
+            </div>
+            <input required type="tel" name="phone" placeholder="Phone number" pattern="^9[678]\d{8}$" title="Enter a valid Nepali phone number" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm" />
+
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">Booking email (from your account)</label>
+              <div class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 text-sm text-gray-500 dark:text-gray-400">
+                {user.email}
+              </div>
+            </div>
+
+            <select required name="drivingLicenseStatus" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm">
+              <option value="">Driving license status</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Learner Permit">Learner Permit</option>
+              <option value="Renewal">Renewal</option>
+            </select>
+
+            <select required name="preferredVehicle" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm">
+              <option value="">Preferred vehicle</option>
+              <option value="Manual">Manual</option>
+              <option value="Automatic">Automatic</option>
+            </select>
+
+            <div class="flex items-center gap-2 text-sm text-[#374151] dark:text-gray-300">
+              <input type="checkbox" id="pickup-required" name="pickupRequired" class="rounded" />
+              <label for="pickup-required">Pickup required</label>
+            </div>
+            <input id="pickup-address" name="pickupAddress" placeholder="Pickup address" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm hidden" />
+
+            <textarea name="notes" placeholder="Notes (optional)" rows="2" class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white text-sm"></textarea>
+
+            <div class="flex items-start gap-2 text-xs text-[#374151] dark:text-gray-400">
+              <input required type="checkbox" id="agreement" class="mt-0.5 rounded" />
+              <label for="agreement">I agree to the terms and cancellation policy.</label>
+            </div>
+
+            <p id="booking-error" class="text-sm text-red-600 hidden"></p>
+            <p id="booking-success" class="text-sm text-emerald-600 hidden">Booking submitted! We'll confirm shortly.</p>
+
+            <button type="submit" id="booking-submit" disabled class="w-full py-3 bg-[#FF9F1C] hover:bg-[#e8901a] disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition">
+              Book Now
+            </button>
+          </form>
+        </div>
       </div>
-
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          readonly
-          value={user.email}
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 bg-gray-50 dark:bg-gray-600 text-gray-500 dark:text-gray-300 cursor-not-allowed"
-        />
-      </div>
-
-      <div>
-        <label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Phone
-        </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          required
-          pattern="^98[0-9]{8}$"
-          placeholder="98XXXXXXXX"
-          aria-describedby="phone-hint booking-error"
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
-        />
-        <p id="phone-hint" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
-          10-digit number starting with 98 (e.g. 9800000000)
-        </p>
-      </div>
-
-      <div>
-        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Notes <span class="text-gray-400 dark:text-gray-500">(optional)</span>
-        </label>
-        <textarea
-          id="notes"
-          name="notes"
-          rows="3"
-          placeholder="Preferred schedule, questions, etc."
-          class="w-full px-4 py-3 rounded-md border border-[#14171A]/15 dark:border-gray-500 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#1F6F50]"
-        ></textarea>
-      </div>
-
-      <p id="booking-error" class="text-sm text-red-600 hidden" role="alert" aria-live="assertive"></p>
-
-      <button
-        type="submit"
-        id="booking-submit"
-        class="w-full py-3.5 bg-[#F0A93B] hover:bg-[#dd9a30] text-[#14171A] font-bold uppercase tracking-wide text-sm rounded-md transition disabled:opacity-50 flex items-center justify-center gap-2"
-      >
-        <svg
-          id="booking-spinner"
-          class="hidden animate-spin h-4 w-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-        </svg>
-        <span>Confirm Booking</span>
-      </button>
-    </form>
-  </section>
+    </div>
+  </div>
 </Layout>
 
-<script define:vars={{ courseDocumentId: course.documentId, courseSlug: course.slug, courseTitle: course.title, coursePrice: course.price }}>
-  const form = document.getElementById("booking-form");
-  const errorEl = document.getElementById("booking-error");
+<script define:vars={{ courseSlug: course.slug, courseDocumentId: course.documentId, courseTitle: course.title, coursePrice: course.price, userEmail: user.email, slots, holidays }}>
+  const holidayDates = new Set(holidays.map((h) => h.date));
+
+  const slotsByDate = {};
+  slots.forEach((s) => {
+    if (!slotsByDate[s.date]) slotsByDate[s.date] = [];
+    slotsByDate[s.date].push(s);
+  });
+
+  let viewDate = new Date();
+  let selectedDate = null;
+  let selectedSlot = null;
+
+  const monthLabel = document.getElementById("cal-month-label");
+  const grid = document.getElementById("calendar-grid");
+  const timeSlotsEl = document.getElementById("time-slots");
+  const summaryEl = document.getElementById("selection-summary");
+  const summaryTime = document.getElementById("summary-time");
+  const summaryDate = document.getElementById("summary-date");
   const submitBtn = document.getElementById("booking-submit");
-  const spinner = document.getElementById("booking-spinner");
 
-  form.addEventListener("submit", async (e) => {
+  function toDateStr(d) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  function renderCalendar() {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    monthLabel.textContent = viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = toDateStr(new Date());
+
+    grid.innerHTML = "";
+    ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].forEach((d) => {
+      const el = document.createElement("div");
+      el.className = "text-gray-400 font-semibold py-1";
+      el.textContent = d;
+      grid.appendChild(el);
+    });
+
+    for (let i = 0; i < firstDay; i++) grid.appendChild(document.createElement("div"));
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(year, month, day);
+      const dateStr = toDateStr(dateObj);
+      const isPast = dateStr < today;
+      const isHoliday = holidayDates.has(dateStr);
+      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+
+      const daySlots = slotsByDate[dateStr] || [];
+      const isFullyBooked = daySlots.length > 0 && daySlots.every((s) => s.slotStatus === "Full");
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = String(day);
+      btn.disabled = isPast || isHoliday;
+
+      let classes = "py-2 rounded-lg text-xs transition ";
+      if (isPast) classes += "text-gray-300 cursor-not-allowed";
+      else if (isHoliday) classes += "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed";
+      else if (isFullyBooked) classes += "bg-red-100 text-red-500 cursor-not-allowed";
+      else if (dateStr === today) classes += "bg-[#FF9F1C] text-white font-bold hover:bg-[#e8901a]";
+      else if (isWeekend) classes += "bg-blue-50 dark:bg-blue-900/20 text-[#111827] dark:text-white hover:bg-blue-100";
+      else classes += "bg-green-50 dark:bg-green-900/20 text-[#111827] dark:text-white hover:bg-green-100";
+
+      if (selectedDate === dateStr) classes += " ring-2 ring-[#FF9F1C]";
+
+      btn.className = classes;
+      if (!isPast && !isHoliday && !isFullyBooked) {
+        btn.addEventListener("click", () => selectDate(dateStr));
+      }
+      grid.appendChild(btn);
+    }
+  }
+
+  function selectDate(dateStr) {
+    selectedDate = dateStr;
+    selectedSlot = null;
+    document.getElementById("selected-date").value = dateStr;
+    renderCalendar();
+    renderTimeSlots();
+  }
+
+  function formatDateStr(dateStr) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString("en-US", {
+      weekday: "long", month: "short", day: "numeric", year: "numeric",
+    });
+  }
+
+  function renderTimeSlots() {
+    const daySlots = slotsByDate[selectedDate] || [];
+    timeSlotsEl.innerHTML = "";
+
+    if (daySlots.length === 0) {
+      timeSlotsEl.innerHTML = '<p class="text-sm text-gray-400">No slots available for this day.</p>';
+      return;
+    }
+
+    daySlots.forEach((slot) => {
+      const isBlocked = slot.slotStatus === "Full" || slot.slotStatus === "Blocked" || slot.slotStatus === "Holiday";
+      const isLow = slot.remainingSeats > 0 && slot.remainingSeats <= 2;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.disabled = isBlocked;
+      btn.className = `w-full text-left px-4 py-2.5 rounded-lg text-sm border transition ${
+        isBlocked
+          ? "bg-gray-50 dark:bg-gray-700 text-gray-300 cursor-not-allowed"
+          : selectedSlot?.id === slot.id
+          ? "bg-[#FF9F1C] border-[#FF9F1C] text-white"
+          : "border-gray-200 dark:border-gray-600 hover:border-[#FF9F1C] text-[#111827] dark:text-white"
+      }`;
+      btn.innerHTML = `${slot.startTime?.slice(0, 5)} ${
+        isBlocked ? "· Fully booked" : isLow ? "· Few seats left" : "· Available"
+      }`;
+      if (!isBlocked) {
+        btn.addEventListener("click", () => selectSlot(slot));
+      }
+      timeSlotsEl.appendChild(btn);
+    });
+  }
+
+  function selectSlot(slot) {
+    selectedSlot = slot;
+    document.getElementById("selected-time").value = slot.startTime;
+    document.getElementById("selected-slot-id").value = slot.id;
+    summaryTime.textContent = slot.startTime?.slice(0, 5);
+    summaryDate.textContent = formatDateStr(selectedDate);
+    summaryEl.classList.remove("hidden");
+    submitBtn.disabled = false;
+    renderTimeSlots();
+  }
+
+  document.getElementById("cal-prev").addEventListener("click", () => {
+    viewDate.setMonth(viewDate.getMonth() - 1);
+    renderCalendar();
+  });
+  document.getElementById("cal-next").addEventListener("click", () => {
+    viewDate.setMonth(viewDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  document.getElementById("pickup-required").addEventListener("change", (e) => {
+    document.getElementById("pickup-address").classList.toggle("hidden", !e.target.checked);
+  });
+
+  document.getElementById("booking-form").addEventListener("submit", async (e) => {
     e.preventDefault();
+    const errorEl = document.getElementById("booking-error");
+    const successEl = document.getElementById("booking-success");
     errorEl.classList.add("hidden");
-    submitBtn.disabled = true;
-    spinner.classList.remove("hidden");
 
-    const formData = new FormData(form);
+    const formData = new FormData(e.target);
     const payload = {
-      courseDocumentId,
-      courseSlug,
-      courseTitle,
-      coursePrice,
-      name: formData.get("name"),
-      email: formData.get("email"),
+      courseDocumentId: courseDocumentId,
+      courseSlug: courseSlug,
+      courseTitle: courseTitle,
+      coursePrice: coursePrice,
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      name: `${formData.get("firstName")} ${formData.get("lastName")}`,
+      email: userEmail,
       phone: formData.get("phone"),
-      notes: formData.get("notes"),
+      selectedDate: formData.get("selectedDate"),
+      selectedTime: formData.get("selectedTime"),
+      availableSlot: formData.get("availableSlot") || undefined,
+      drivingLicenseStatus: formData.get("drivingLicenseStatus"),
+      preferredVehicle: formData.get("preferredVehicle"),
+      pickupRequired: formData.get("pickupRequired") === "on",
+      pickupAddress: formData.get("pickupAddress") || undefined,
+      notes: formData.get("notes") || undefined,
     };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
 
     try {
       const res = await fetch("/api/bookings", {
@@ -159,23 +320,25 @@ if (!course) {
         body: JSON.stringify(payload),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Booking failed.");
 
-      if (!res.ok) {
-        throw new Error(data?.error || "Something went wrong.");
-      }
-
+      const booking = data.booking;
       const params = new URLSearchParams({
-        name: data.booking.name,
-        email: data.booking.email,
-        courseTitle: data.booking.courseTitle,
-        coursePrice: String(data.booking.coursePrice),
+        id: String(booking.id),
+        course: booking.courseTitle,
+        date: formData.get("selectedDate"),
+        time: formData.get("selectedTime"),
+        price: String(booking.coursePrice),
+        name: booking.name,
       });
-      window.location.href = `/courses/${courseSlug}/confirmed?${params.toString()}`;
+      window.location.href = `/booking-confirmation?${params.toString()}`;
     } catch (err) {
       errorEl.textContent = err instanceof Error ? err.message : "Something went wrong.";
       errorEl.classList.remove("hidden");
       submitBtn.disabled = false;
-      spinner.classList.add("hidden");
+      submitBtn.textContent = "Book Now";
     }
   });
+
+  renderCalendar();
 </script>
